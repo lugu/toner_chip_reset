@@ -5,6 +5,9 @@
 BOARD_TAG    = mega2560
 MONITOR_PORT  = /dev/ttyACM0
 
+ARDUINO_LIBS += Wire
+ARDUINO_LIBS += SoftwareSerial
+
 # include ../../Arduino.mk
 include /usr/share/arduino/Arduino.mk
 

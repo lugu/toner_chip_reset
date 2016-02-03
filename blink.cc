@@ -9,6 +9,9 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
+#include <Arduino.h>
+#include <Wire.h>
+
 void init_io(void)
 {
 	// 1 = output, 0 = input
@@ -17,9 +20,16 @@ void init_io(void)
 	DDRD = 0b11111110; // PORTD (RX on PD0). Just for demo
 }
 
+void init_wire(void)
+{
+  Wire.begin();        // join i2c bus (address optional for master)
+  Serial.begin(9600);  // start serial for output
+}
+
 int main(void)
 {
 	init_io();
+	init_wire();
 
 	while (1)
 	{
