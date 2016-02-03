@@ -42,6 +42,8 @@ int main(void)
 		PORTB = 0x00;
 		PORTD = 0x00;
 		_delay_ms(500);
+
+		Serial.println("hello");
 	}
 
 	return 0;
