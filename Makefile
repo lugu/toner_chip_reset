@@ -2,14 +2,8 @@
 #
 # Arduino Make file. Refer to https://github.com/sudar/Arduino-Makefile
 
-NO_CORE = Yes
-
-BOARD_TAG    = atmega16
-MCU = atmega16
-F_CPU = 8000000L
-
-ISP_PROG   = stk500v1
-AVRDUDE_ISP_BAUDRATE = 19200
+BOARD_TAG    = mega2560
+MONITOR_PORT  = /dev/ttyACM0
 
 # include ../../Arduino.mk
 include /usr/share/arduino/Arduino.mk
