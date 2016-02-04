@@ -13,6 +13,33 @@ Depending on the board the i2c pins are:
 Links
 =====
 
-Wire.h reference:
-	file:///usr/share/arduino/reference/Wire.html
+Arduino:
+	http://www.hobbytronics.co.uk/arduino-external-eeprom
 	https://www.arduino.cc/en/Reference/Wire
+
+
+Blogs:
+	http://www.mikrocontroller.net/topic/369267
+	https://esdblog.org/ricoh-sp-c250dn-laser-printer-toner-hack/
+
+Ricoh:
+	https://www.techdata.com/business/Ricoh/files/july2014/CurrentMSRP.pdf
+	http://support.ricoh.com/bb_v1oi/pub_e/oi/0001044/0001044844/VM1018655/M1018655.pdf
+
+Datasheets:
+	http://www.gaw.ru/pdf/Rohm/memory/br24l01.pdf
+	http://www.rinkem.com/web/userfiles/productfile/upload/201009/FM24C02B-04B-08B-16B.pdf
+
+
+Ricoh SP112 LED
+===============
+
+	Left LED: Power Indicator
+	This indicator lights up blue when the machine is turned on.
+	It flashes when a print job is received and while printing is in progress.
+
+	Right LED: Alert Indicator
+	This indicator lights up red when the machine runs out of paper or consumables,
+	when the paper settings do match the settings specified by the driver,
+	or when other abnormalities occur.
+
