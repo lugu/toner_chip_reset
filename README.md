@@ -13,12 +13,14 @@ Depending on the board the i2c pins are:
 Links
 =====
 
-Arduino:
+Blog:
 	http://www.hobbytronics.co.uk/arduino-external-eeprom
+	http://www.hobbytronics.co.uk/eeprom-page-write
+
+Arduino:
 	https://www.arduino.cc/en/Reference/Wire
 
-
-Blogs:
+Tonner investigations:
 	http://www.mikrocontroller.net/topic/369267
 	https://esdblog.org/ricoh-sp-c250dn-laser-printer-toner-hack/
 
