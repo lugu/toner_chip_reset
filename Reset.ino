@@ -10,19 +10,20 @@ void setup() {
 		; // wait for serial port to connect
 	}
 	Serial.println("Let's start!");
+
+	while (address < 512) {
+		value = EEPROM.read(address);
+
+		Serial.print("address: ");
+		Serial.print(address, HEX);
+		Serial.print(" value: ");
+		Serial.print(value, HEX);
+		Serial.print("\r\n");
+
+		address++;
+
+		delay(100);
+	}
 }
 
-void loop() {
-
-	value = EEPROM.read(address);
-
-	Serial.print("address: ");
-	Serial.print(address, HEX);
-	Serial.print(" value: ");
-	Serial.print(value, HEX);
-	Serial.print("\r\n");
-
-	address++;
-
-	delay(200);
-}
+void loop() { }
