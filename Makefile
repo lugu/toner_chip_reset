@@ -7,5 +7,6 @@ MONITOR_PORT  = /dev/ttyACM0
 
 ARDUINO_LIBS += SoftwareSerial
 ARDUINO_LIBS += Wire
+ARDUINO_LIBS += EEPROM
 
 include /usr/share/arduino/Arduino.mk
