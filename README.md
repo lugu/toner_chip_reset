@@ -1,4 +1,28 @@
 
+Done
+====
+
+* Create arduino hello world
+* Read internal EEPROM
+
+Todo
+=====
+
+* Draw the cricuit
+* Understand the cricuit
+* Find the exact EEPROM chip model
+* Find a dummy i2c device to validate the communication
+* Communicate with the dummy i2c device
+* Find the EEPROM address
+* Read the EPPROM chip
+* Analyse the EEPROM dump
+* Make a data hypothesis
+* Disable the write protection
+* Write the EEPROM
+* Test with the printer
+
+
+
 Connections
 ===========
 
@@ -16,6 +40,7 @@ Links
 Blog:
 	http://www.hobbytronics.co.uk/arduino-external-eeprom
 	http://www.hobbytronics.co.uk/eeprom-page-write
+	http://lusorobotica.com/index.php/topic,461.msg2738.html
 
 Arduino:
 	https://www.arduino.cc/en/Reference/Wire
