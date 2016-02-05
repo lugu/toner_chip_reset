@@ -25,7 +25,12 @@ byte readEEPROM(int device, unsigned int address) {
 
 void setup(void){
   Wire.begin();
+
   Serial.begin(9600);
+  while (!Serial.available()) {
+	  ; // wait for serial port to connect
+  }
+  Serial.println("Let's start!");
 
   unsigned int address = 0;
   Serial.println("Reading first bytes of the EEPROM");
