@@ -1,29 +1,40 @@
 
-#include <EEPROM.h>
+#include <Wire.h>
+#define eeprom 0x50
 
-int address = 0;
-byte value;
-
-void setup() {
-	Serial.begin(9600);
-	while (!Serial.available()) {
-		; // wait for serial port to connect
-	}
-	Serial.println("Let's start!");
-
-	while (address < 512) {
-		value = EEPROM.read(address);
-
-		Serial.print("address: ");
-		Serial.print(address, HEX);
-		Serial.print(" value: ");
-		Serial.print(value, HEX);
-		Serial.print("\r\n");
-
-		address++;
-
-		delay(100);
-	}
+void writeEEPROM(int device, unsigned int address, byte data ) {
+  Wire.beginTransmission(device);
+  Wire.write((int)(address >> 8));   // MSB
+  Wire.write((int)(address & 0xFF)); // LSB
+  Wire.write(data);
+  Wire.endTransmission();
 }
 
-void loop() { }
+byte readEEPROM(int device, unsigned int address) {
+  byte rdata = 0xFF;
+  Wire.beginTransmission(device);
+  Wire.write((int)(address >> 8));   // MSB
+  Wire.write((int)(address & 0xFF)); // LSB
+  Wire.endTransmission();
+  Wire.requestFrom(device,1);
+  if (Wire.available()) {
+	  rdata = Wire.read();
+  }
+  return rdata;
+}
+
+void setup(void){
+  Wire.begin();
+  Serial.begin(9600);
+
+  unsigned int address = 0;
+  Serial.println("Reading first bytes of the EEPROM");
+
+  for(address = 0; address<10; address++) {
+     Serial.print(readEEPROM(eeprom, address), HEX); 
+     Serial.print(", ");
+  }
+}
+
+void loop(){
+}
