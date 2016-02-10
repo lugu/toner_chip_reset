@@ -1,15 +1,21 @@
 
+Install
+=======
+
+	$ make
+	$ make upload
+
 Done
 ====
 
 * Create arduino hello world
 * Read internal EEPROM
+* Draw the cricuit
+* Understand the cricuit
 
 Todo
 =====
 
-* Draw the cricuit
-* Understand the cricuit
 * Find the exact EEPROM chip model
 * Find a dummy i2c device to validate the communication
 * Communicate with the dummy i2c device
