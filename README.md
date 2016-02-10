@@ -4,6 +4,7 @@ Install
 
 	$ make
 	$ make upload
+	$ picocom -b 115200 /dev/ttyACM0
 
 Done
 ====
@@ -16,6 +17,7 @@ Done
 Todo
 =====
 
+* Try i2c clock at 400kHz and 1MHz
 * Find the exact EEPROM chip model
 * Find a dummy i2c device to validate the communication
 * Communicate with the dummy i2c device
