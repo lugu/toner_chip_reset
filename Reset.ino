@@ -24,8 +24,7 @@ byte readEEPROM(int eeprom, unsigned int address) {
 
 void setup(void){
 	Wire.begin();
-	// TODO: try clock to 1MHz and 400kHz
-	// Wire.setclock(400000L);
+	Wire.setClock(400000L);
 
 	Serial.begin(115200);
 	while (!Serial.available()) {
@@ -35,10 +34,10 @@ void setup(void){
 
 	unsigned int eeprom; // 0x50 = 80 = 1010000
 	for(eeprom = 0x50; eeprom < 0x50+8; eeprom++) {
-		Serial.print("DUMP EEPROM ");
+		Serial.print("EEPROM ");
 		Serial.println(eeprom);
 		unsigned int address = 0;
-		for(address = 0; address < 1024; address++) {
+		for(address = 0; address < 64; address++) {
 			Serial.print(readEEPROM(eeprom, address), HEX); 
 			Serial.print(", ");
 		}

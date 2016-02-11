@@ -14,9 +14,9 @@ AVRDUDE_ARD_BAUDRATE = 115200
 ARDUINO_LIBS += SoftwareSerial
 ARDUINO_LIBS += Wire
 
-# ARDUINO_DIR = /home/ludo/src/arduino-1.6.7
+ARDUINO_DIR = /home/ludo/src/arduino-1.6.7
 
-# VARIANT = mega
+VARIANT = mega
 MCU = atmega2560
 F_CPU = 16000000L
 
