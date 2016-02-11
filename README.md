@@ -2,6 +2,7 @@
 Install
 =======
 
+	$ cd reset
 	$ make
 	$ make upload
 	$ picocom -b 115200 /dev/ttyACM0

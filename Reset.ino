@@ -1,30 +1,84 @@
 
 #include <Wire.h>
 
-void writeEEPROM(int eeprom, unsigned int address, byte data ) {
+void writeEEPROM(int eeprom, unsigned int reg, byte data ) {
 	Wire.beginTransmission(eeprom);
-	Wire.write((int)(address >> 8));   // MSB
-	Wire.write((int)(address & 0xFF)); // LSB
+	Wire.write((int)(reg >> 8));   // MSB
+	Wire.write((int)(reg & 0xFF)); // LSB
 	Wire.write(data);
 	Wire.endTransmission();
 }
 
-byte readEEPROM(int eeprom, unsigned int address) {
-	byte rdata = 0xFF;
+// returns 0 if a device respond at this address.
+int testEEPROM(int eeprom) {
 	Wire.beginTransmission(eeprom);
-	Wire.write((int)(address >> 8));   // MSB
-	Wire.write((int)(address & 0xFF)); // LSB
-	Wire.endTransmission();
-	Wire.requestFrom(eeprom,1);
-	if (Wire.available()) {
-		rdata = Wire.read();
+
+	byte error = Wire.endTransmission();
+
+	if (error == 0) {
+		Serial.println("");
+		Serial.print("Device found at address 0x");
+		Serial.println(eeprom, HEX);
+	} else {
+		Serial.println("");
+		Serial.print("No device at address 0x");
+		Serial.println(eeprom, HEX);
+		return 1;
 	}
-	return rdata;
+
+	return 0;
+}
+
+byte printRegister(int eeprom, unsigned int reg) {
+	Wire.beginTransmission(eeprom);
+
+	byte size;
+	size = Wire.write((int)(reg >> 8));   // MSB
+	if (size == 0)
+	{
+		Serial.print("Failed to write MSB at address 0x");
+		Serial.println(eeprom, HEX);
+	}
+	size = Wire.write((int)(reg & 0xFF)); // LSB
+	if (size == 0)
+	{
+		Serial.print("Failed to write LSB at address 0x");
+		Serial.println(eeprom, HEX);
+	}
+
+	byte error = Wire.endTransmission();
+	if (error != 0)
+	{
+		Serial.print("I2C device not found at address 0x");
+		Serial.println(eeprom, HEX);
+	}
+
+	size = Wire.requestFrom(eeprom,1);
+	if (error != 0)
+	{
+		Serial.print("I2C device did not respond to request at address 0x");
+		Serial.println(eeprom, HEX);
+	}
+	if (Wire.available()) {
+		byte rdata = 0xFF;
+		rdata = Wire.read();
+		Serial.print("0x");
+		Serial.print(reg, HEX);
+		Serial.print(": ");
+		Serial.print(rdata, HEX); 
+		Serial.println("");
+	} else {
+		Serial.print("Failed to read register 0x");
+		Serial.print(reg, HEX);
+		Serial.println("");
+		return 1;
+	}
+	return 0;
 }
 
 void setup(void){
 	Wire.begin();
-	Wire.setClock(400000L);
+	Wire.setClock(1000000L);
 
 	Serial.begin(115200);
 	while (!Serial.available()) {
@@ -34,14 +88,15 @@ void setup(void){
 
 	unsigned int eeprom; // 0x50 = 80 = 1010000
 	for(eeprom = 0x50; eeprom < 0x50+8; eeprom++) {
-		Serial.print("EEPROM ");
-		Serial.println(eeprom);
-		unsigned int address = 0;
-		for(address = 0; address < 64; address++) {
-			Serial.print(readEEPROM(eeprom, address), HEX); 
-			Serial.print(", ");
+		if (testEEPROM(eeprom) != 0) {
+			continue;
 		}
-		Serial.println("");
+		unsigned int reg = 0;
+		for(reg = 0; reg < 64; reg++) {
+			if (printRegister(eeprom, reg) != 0) {
+				break; 
+			}
+		}
 	}
 }
 
