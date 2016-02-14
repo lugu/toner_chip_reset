@@ -77,17 +77,20 @@ byte printRegister(int eeprom, unsigned int reg) {
 }
 
 void setup(void){
-	Wire.begin();
-	Wire.setClock(1000000L);
 
 	Serial.begin(115200);
 	while (!Serial.available()) {
 		; // wait for serial port to connect
 	}
 	Serial.println("Let's start!");
+	Wire.begin();
+	Wire.setClock(1000000L);
+	Serial.println("I2C bus initalized!");
+}
 
+void loop(){
 	unsigned int eeprom; // 0x50 = 80 = 1010000
-	for(eeprom = 0x50; eeprom < 0x50+8; eeprom++) {
+	for(eeprom = 0x0; eeprom < 128; eeprom++) {
 		if (testEEPROM(eeprom) != 0) {
 			continue;
 		}
@@ -98,7 +101,4 @@ void setup(void){
 			}
 		}
 	}
-}
-
-void loop(){
 }

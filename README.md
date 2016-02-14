@@ -14,11 +14,13 @@ Done
 * Read internal EEPROM
 * Draw the cricuit
 * Understand the cricuit
+* Try i2c clock at 400kHz and 1MHz
+* Scan for device
 
 Todo
 =====
 
-* Try i2c clock at 400kHz and 1MHz
+* Read one EEPROM datasheet
 * Find the exact EEPROM chip model
 * Find a dummy i2c device to validate the communication
 * Communicate with the dummy i2c device
