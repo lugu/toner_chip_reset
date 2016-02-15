@@ -17,11 +17,13 @@ Done
 * Try i2c clock at 400kHz and 1MHz
 * Scan for device
 * Analyse I2C trame with a logical analyser
+* Visualize I2C packets with pulseview
+* Read one EEPROM datasheet
 
 Todo
 =====
 
-* Read one EEPROM datasheet
+* Debug i2c addresses sent (1010001 and not 0101000)
 * Verifies the timming between read and write operations
 * Find the exact EEPROM chip model
 * Find a dummy i2c device to validate the communication
@@ -61,6 +63,13 @@ Random read:
 	master send eeprom address + read bit
 	device respond with data
 	master send stop condition
+
+device 50
+receive NAK failed to set current address
+
+device 51
+no data available from device
+failed to read current address
 
 
 Connections

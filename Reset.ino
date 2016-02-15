@@ -1,6 +1,15 @@
 
 #include <Wire.h>
 
+int signalPin = 30; // use this pin to time sequences
+
+// swith on/off n times the digital pin
+void bip(unsigned int pin) {
+	digitalWrite(pin, HIGH);
+	delayMicroseconds(2);
+	digitalWrite(pin, LOW);
+}
+
 void writeEEPROM(int eeprom, unsigned int address, byte data ) {
 	Wire.beginTransmission(eeprom);
 	Wire.write((int)(address >> 8));   // MSB
@@ -48,7 +57,6 @@ unsigned int setCurrentAddress(int eeprom, unsigned int address) {
 unsigned int printCurrentAddress(int eeprom) {
 	byte size = Wire.requestFrom(eeprom, 1, true);
 	if (size == 0) {
-		// Serial.println("no data receive from device");
 	}
 	if (Wire.available()) {
 		byte rdata = Wire.read();
@@ -57,6 +65,7 @@ unsigned int printCurrentAddress(int eeprom) {
 		Serial.println("");
 		return 0;
 	} else {
+		Serial.println("no data available from device");
 		return 1;
 	}
 }
@@ -70,22 +79,13 @@ unsigned int printRandomAddress(int eeprom, unsigned int address) {
 		Serial.println("failed to set current address");
 		return 1;
 	}
+	delay(5); // wait 5 ms between write and read
 
 	if (printCurrentAddress(eeprom) != 0) {
 		Serial.println("failed to read current address");
 		return 2;
 	}
 	return 0;
-}
-
-int signalPin = 30; // use this pin to time sequences
-
-// swith on/off n times the digital pin
-void bip(unsigned int pin) {
-	digitalWrite(pin, HIGH);
-	delay(1);
-	digitalWrite(pin, LOW);
-	delay(1);
 }
 
 void setup(void){
