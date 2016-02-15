@@ -1,79 +1,91 @@
 
 #include <Wire.h>
 
-void writeEEPROM(int eeprom, unsigned int reg, byte data ) {
+void writeEEPROM(int eeprom, unsigned int address, byte data ) {
 	Wire.beginTransmission(eeprom);
-	Wire.write((int)(reg >> 8));   // MSB
-	Wire.write((int)(reg & 0xFF)); // LSB
+	Wire.write((int)(address >> 8));   // MSB
+	Wire.write((int)(address & 0xFF)); // LSB
 	Wire.write(data);
 	Wire.endTransmission();
 }
 
-// returns 0 if a device respond at this address.
-int testEEPROM(int eeprom) {
+// Set current address:
+//	master send start condition
+//	master send eeprom address + read bit
+//	master send data address
+//	master send start condition
+unsigned int setCurrentAddress(int eeprom, unsigned int address) {
 	Wire.beginTransmission(eeprom);
 
-	byte error = Wire.endTransmission();
-
+	byte size = Wire.write(address);
+	if (size == 0) {
+		Serial.println("Failed to write address");
+		return 10;
+	}
+	byte error = Wire.endTransmission(false);
 	if (error == 0) {
-		Serial.println("");
-		Serial.print("Device found at address 0x");
-		Serial.println(eeprom, HEX);
+		// Serial.println("tranmission success");
+	} else if (error == 1) {
+		Serial.println("data too long to fit in buffer");
+	} else if (error == 2) {
+		Serial.println("receive NAK when transmiting address");
+	} else if (error == 3) {
+		Serial.println("receive NAK when transmiting data");
+	} else if (error == 4) {
+		Serial.println("other error");
 	} else {
+		Serial.println("unknown error");
+	}
+
+	// return error value
+	return error;
+}
+
+// Current read:
+// 	master send eeprom address + read bit
+// 	device respond with data
+// 	master send stop condition
+unsigned int printCurrentAddress(int eeprom) {
+	byte size = Wire.requestFrom(eeprom, 1, true);
+	if (size == 0) {
+		// Serial.println("no data receive from device");
+	}
+	if (Wire.available()) {
+		byte rdata = Wire.read();
+		Serial.print("0x");
+		Serial.print(rdata, HEX);
 		Serial.println("");
-		Serial.print("No device at address 0x");
-		Serial.println(eeprom, HEX);
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+// Random read:
+//	1. set current address
+//	2. read current address
+unsigned int printRandomAddress(int eeprom, unsigned int address) {
+
+	if (setCurrentAddress(eeprom, address) != 0) {
+		Serial.println("failed to set current address");
 		return 1;
 	}
 
+	if (printCurrentAddress(eeprom) != 0) {
+		Serial.println("failed to read current address");
+		return 2;
+	}
 	return 0;
 }
 
-byte printRegister(int eeprom, unsigned int reg) {
-	Wire.beginTransmission(eeprom);
+int signalPin = 30; // use this pin to time sequences
 
-	byte size;
-	size = Wire.write((int)(reg >> 8));   // MSB
-	if (size == 0)
-	{
-		Serial.print("Failed to write MSB at address 0x");
-		Serial.println(eeprom, HEX);
-	}
-	size = Wire.write((int)(reg & 0xFF)); // LSB
-	if (size == 0)
-	{
-		Serial.print("Failed to write LSB at address 0x");
-		Serial.println(eeprom, HEX);
-	}
-
-	byte error = Wire.endTransmission();
-	if (error != 0)
-	{
-		Serial.print("I2C device not found at address 0x");
-		Serial.println(eeprom, HEX);
-	}
-
-	size = Wire.requestFrom(eeprom,1);
-	if (error != 0)
-	{
-		Serial.print("I2C device did not respond to request at address 0x");
-		Serial.println(eeprom, HEX);
-	}
-	if (Wire.available()) {
-		byte rdata = 0xFF;
-		rdata = Wire.read();
-		Serial.print("0x");
-		Serial.print(reg, HEX);
-		Serial.print(": ");
-		Serial.print(rdata, HEX); 
-		Serial.println("");
-	} else {
-		Serial.print("Failed to read register 0x");
-		Serial.print(reg, HEX);
-		Serial.println("");
-		return 1;
-	}
-	return 0;
+// swith on/off n times the digital pin
+void bip(unsigned int pin) {
+	digitalWrite(pin, HIGH);
+	delay(1);
+	digitalWrite(pin, LOW);
+	delay(1);
 }
 
 void setup(void){
@@ -86,18 +98,22 @@ void setup(void){
 	Wire.begin();
 	Wire.setClock(1000000L);
 	Serial.println("I2C bus initalized!");
+
+	pinMode(signalPin, OUTPUT);
 }
 
 void loop(){
-	unsigned int eeprom; // 0x50 = 80 = 1010000
-	for(eeprom = 0x0; eeprom < 128; eeprom++) {
-		if (testEEPROM(eeprom) != 0) {
-			continue;
-		}
-		unsigned int reg = 0;
-		for(reg = 0; reg < 64; reg++) {
-			if (printRegister(eeprom, reg) != 0) {
-				break; 
+	unsigned int eeprom = 0x50; // 0x50 = 80 = 1010000
+	for(eeprom = 0x50; eeprom < 0x58; eeprom++) {
+		unsigned int address;
+		Serial.print("device ");
+		Serial.print(eeprom, HEX);
+		Serial.println("");
+
+		bip(signalPin); // signal begining of a sequence
+		for(address = 0; address < 128; address++) {
+			if (printRandomAddress(eeprom, address) != 0) {
+				break;
 			}
 		}
 	}

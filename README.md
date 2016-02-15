@@ -16,11 +16,13 @@ Done
 * Understand the cricuit
 * Try i2c clock at 400kHz and 1MHz
 * Scan for device
+* Analyse I2C trame with a logical analyser
 
 Todo
 =====
 
 * Read one EEPROM datasheet
+* Verifies the timming between read and write operations
 * Find the exact EEPROM chip model
 * Find a dummy i2c device to validate the communication
 * Communicate with the dummy i2c device
@@ -44,6 +46,22 @@ A1 = 0
 A2 = 0
 
 1010001 = 81
+
+A0, A1, A2 can be not used if the eeprom has more than 2K memory.
+STOP condition mandatory between writes.
+Write cycle: 5 ms.
+
+
+Random read:
+
+	master send start condition
+	master send eeprom address + read bit
+	master send data address
+	master send start condition
+	master send eeprom address + read bit
+	device respond with data
+	master send stop condition
+
 
 Connections
 ===========
@@ -78,6 +96,10 @@ Ricoh:
 Datasheets:
 	http://www.gaw.ru/pdf/Rohm/memory/br24l01.pdf
 	http://www.rinkem.com/web/userfiles/productfile/upload/201009/FM24C02B-04B-08B-16B.pdf
+
+Logical Analyser & I2C:
+	http://support.saleae.com/hc/en-us/articles/202740085-Using-Protocol-Analyzers
+	http://support.saleae.com/hc/en-us/articles/200730905-Learn-I2C-Inter-Integrated-Circuit
 
 
 Ricoh SP112 LED
