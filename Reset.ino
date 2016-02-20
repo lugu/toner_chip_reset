@@ -96,22 +96,23 @@ void setup(void){
 	}
 	Serial.println("Let's start!");
 	Wire.begin();
-	Wire.setClock(1000000L);
+	unsigned int clock = 800000L; // 400kHz or 1MHz 1000000L;
+	Wire.setClock(clock);
 	Serial.println("I2C bus initalized!");
 
 	pinMode(signalPin, OUTPUT);
 }
 
 void loop(){
-	unsigned int eeprom = 0x50; // 0x50 = 80 = 1010000
-	for(eeprom = 0x50; eeprom < 0x58; eeprom++) {
+	unsigned int eeprom; // 0x50 = 80 = 1010000
+	for(eeprom = 0x53; eeprom < 0x54; eeprom++) {
 		unsigned int address;
 		Serial.print("device ");
 		Serial.print(eeprom, HEX);
 		Serial.println("");
 
 		bip(signalPin); // signal begining of a sequence
-		for(address = 0; address < 128; address++) {
+		for(address = 0; address < 8*1024; address++) {
 			if (printRandomAddress(eeprom, address) != 0) {
 				break;
 			}
