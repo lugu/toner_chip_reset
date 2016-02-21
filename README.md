@@ -18,8 +18,8 @@ Done
 * Analyse I2C trame with a logical analyser
 * Visualize I2C packets with pulseview
 * Read one EEPROM datasheet
-* Debug i2c addresses sent (1010001 and not 0101000)
-* Verifies the timming between read and write operations
+* Debug i2c addresses sent (1010001 and not 0101000) ~ frequence to high
+* Verifies the timming between read and write operations (5ms)
 * Find the exact EEPROM chip model
 * Find the EEPROM address (0x53)
 * Read the EPPROM chip
@@ -36,6 +36,17 @@ Todo
 * Test with the printer
 
 
+Connections
+===========
+
+Depending on the board the i2c pins are:
+
+	Board           I2C / TWI pins
+	Uno, Ethernet   A4 (SDA), A5 (SCL)
+	Mega2560        20 (SDA), 21 (SCL)
+	Leonardo        2 (SDA), 3 (SCL)
+	Due             20 (SDA), 21 (SCL), SDA1, SCL1
+
 
 Address
 =======
@@ -49,12 +60,12 @@ A2 = 0
 1010011 = 83
 
 A0, A1, A2 can be not used if the eeprom has more than 2K memory.
-STOP condition mandatory between writes.
-Write cycle: 5 ms.
 
 
+Read operation
+==============
 
-Random read:
+Sequence for random read:
 
 	master send start condition
 	master send eeprom address + read bit
@@ -64,24 +75,32 @@ Random read:
 	device respond with data
 	master send stop condition
 
-device 50
-receive NAK failed to set current address
-
-device 51
-no data available from device
-failed to read current address
+STOP condition mandatory between writes.
+Write cycle: 5 ms.
 
 
-Connections
-===========
+Bus frequency
+=============
 
-Depending on the board the i2c pins are:
+The datasheet of the component FM24C02B indicate an operating clock of 1MHz
+at 3.3V.
 
-	Board           I2C / TWI pins
-	Uno, Ethernet   A4 (SDA), A5 (SCL)
-	Mega2560        20 (SDA), 21 (SCL)
-	Leonardo        2 (SDA), 3 (SCL)
-	Due             20 (SDA), 21 (SCL), SDA1, SCL1
+At 1MHz, no address respond correctly, as well the logical analyser show
+strange data passing. Especially it decoded wrong addresses.
+
+	device 50
+	receive NAK failed to set current address
+
+	device 51
+	no data available from device
+	failed to read current address
+
+This discussion highligth the max frequence an Arduino Mega can reach.
+1MHz seems to be the upper bound.
+
+http://electronics.stackexchange.com/questions/29457/how-to-make-arduino-do-high-speed-i2c
+
+Setting the clocks to 800kHz works just fine.
 
 Links
 =====
