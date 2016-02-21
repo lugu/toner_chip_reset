@@ -24,14 +24,14 @@ Done
 * Find the EEPROM address (0x53)
 * Read the EPPROM chip
 * Order sp112 reset chip from internet
+* Analyse the EEPROM dump
+* Make a data hypothesis
+* Verify the write function
 
 Todo
 =====
 
-* Analyse the EEPROM dump
-* Make a data hypothesis
 * Dump a new reset chip
-* Disable the write protection
 * Write the EEPROM with a dump of a new reset chip
 * Test with the printer
 
@@ -257,37 +257,64 @@ http://www.cnet.com/products/ricoh-sp-112-printer-monochrome-laser/specs/
 Similar part number can be seen in the following dump (407166):
 http://www.mikrocontroller.net/topic/369267
 
+Example of data sent to the printer:
+
+	%-12345X@PJL
+	@PJL SET TIMESTAMP=2015/09/14 21:15:14
+	@PJL SET FILENAME=test - Notepad
+	@PJL SET COMPRESS=JBIG
+	@PJL SET USERNAME=IEUser
+	@PJL SET COVER=OFF
+	@PJL SET HOLD=OFF
+	@PJL SET PAGESTATUS=START
+	@PJL SET COPIES=1
+	@PJL SET MEDIASOURCE=TRAY1
+	@PJL SET MEDIATYPE=PLAINRECYCLE
+	@PJL SET PAPER=LETTER
+	@PJL SET PAPERWIDTH=5100
+	@PJL SET PAPERLENGTH=6600
+	@PJL SET RESOLUTION=600
+	@PJL SET IMAGELEN=691
+	[... image data ... ]
+	@PJL SET DOTCOUNT=10745
+	@PJL SET PAGESTATUS=END
+	@PJL EOJ
+	%-12345X
+
 
 
 	00000000: 2000 0103 0101 0300 0000 ffff ffff ffff   ...............
-			  ^^^^ ^^^^ ^^^^ ^^^^
-			  header
+		  ^^^^ ^^^^ ^^^^ ^^^^      ^^^^ ^^^^ ^^^^
+		  header                   seems later erase with PN
 
 	00000010: 1504 4d47 2700 1882 0000 0000 2000 0101  ..MG'....... ...
-			  ^^^^           ^^^^
-			  increase between two prints
+		  ^^^^           ^^^^
+		  increase between two prints
 
 	00000020: 5830 3235 4d34 3331 3536 3620 0045 0000  X025M431566 .E..
+		  ^^^^ ^^^^ ^^^^ ^^^^ ^^^^ ^^^^ ^^^^
+                  model number for compatibility
+
 
 	00000030: 0000 0000 0000 0000 0000 0106 0000 0000  ................
-			                           ^^^^
-			                           increase between two prints
+		                           ^^^^
+		                           increase between two prints
 
 	00000040: 0000 0107 0000 0000 0000 0000 0000 0000  ................
-			       ^^^^
-			       increase between two prints
+		       ^^^^
+		       increase between two prints
 
 	00000050: 0000 0000 0000 0106 2000 0101 2000 0101  ........ ... ...
-			                 ^^^^
-			                 increase between two prints
+		                 ^^^^
+		                 increase between two prints
 
 	00000060: 0000 0000 0000 0000 0106 0000 0000 0000  ................
-			                      ^^^^
-			                      increase between two prints
+		                      ^^^^
+		                      increase between two prints
 
 	00000070: 000e 715d 1000 1427 0000 0000 0000 0000  ..q]...'........
-			    ^^ ^^^^ ^^^^ ^^^^
-			    increase between two prints
+		    ^^ ^^^^ ^^^^ ^^^^
+		    increase between two prints
 
 	00000080: ffff ffff ffff ffff ffff ffff ffff ffff  ................
 	00000090: ffff ffff ffff ffff ffff ffff ffff ffff  ................
@@ -297,3 +324,31 @@ http://www.mikrocontroller.net/topic/369267
 	000000d0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
 	000000e0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
 	000000f0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+
+From another ricoh printer:
+
+Black:
+	00000000: a800 0103 1201 01ff 6400 3430 3735 3433  ........d.407543
+	00000010: 1409 4142 1600 1626 ffff ffff ffff ffff  ..AB...&........
+	00000020: ffff ffff ffff ffff ffff ffff 6400 0000  ............d...
+	00000030: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+	00000040: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+	00000050: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+	00000060: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+	00000070: ffff ffff ffff ffff 0000 0000 0000 0000  ................
+
+Magenta:
+	00000000: a800 0103 0e03 01ff 6400 3430 3735 3435  ........d.407545
+	00000010: 1501 4142 1800 0372 ffff ffff ffff ffff  ..AB...r........
+	00000020: ffff ffff ffff ffff ffff ffff 6400 0000  ............d...
+	00000030: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+	00000040: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+	00000050: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+	00000060: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+	00000070: ffff ffff ffff ffff 0000 0000 0000 0000  ................
+
+Same pattern:
+	Magic + printer part number
+	Counter + 4142 + Counter
+
+=> We can try to reset the counter and hope for not double checks
