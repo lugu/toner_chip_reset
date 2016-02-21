@@ -10,14 +10,6 @@ void bip(unsigned int pin) {
 	digitalWrite(pin, LOW);
 }
 
-void writeEEPROM(int eeprom, unsigned int address, byte data ) {
-	Wire.beginTransmission(eeprom);
-	Wire.write((int)(address >> 8));   // MSB
-	Wire.write((int)(address & 0xFF)); // LSB
-	Wire.write(data);
-	Wire.endTransmission();
-}
-
 // Set current address:
 //	master send start condition
 //	master send eeprom address + read bit
@@ -70,6 +62,44 @@ unsigned int printCurrentAddress(int eeprom) {
 	}
 }
 
+// Current write:
+// 	master send eeprom address + write bit
+// 	master send data
+// 	master send stop condition
+unsigned int randomWrite(int eeprom, unsigned int address, byte data) {
+	Wire.beginTransmission(eeprom);
+
+	byte size = Wire.write(address);
+	if (size == 0) {
+		Serial.println("Failed to write address");
+		return 1;
+	}
+	size = Wire.write(data);
+	if (size == 0) {
+		Serial.println("Failed to write data");
+		return 2;
+	}
+
+	byte error = Wire.endTransmission(true);
+	if (error == 0) {
+		// Serial.println("tranmission success");
+	} else if (error == 1) {
+		Serial.println("data too long to fit in buffer");
+	} else if (error == 2) {
+		Serial.println("receive NAK when transmiting address");
+	} else if (error == 3) {
+		Serial.println("receive NAK when transmiting data");
+	} else if (error == 4) {
+		Serial.println("other error");
+	} else {
+		Serial.println("unknown error");
+	}
+
+	delay(5); // wait 5 ms, a write cycle
+
+	return error;
+}
+
 // Random read:
 //	1. set current address
 //	2. read current address
@@ -96,7 +126,7 @@ void setup(void){
 	}
 	Serial.println("Let's start!");
 	Wire.begin();
-	unsigned int clock = 800000L; // 400kHz or 1MHz 1000000L;
+	unsigned int clock = 800000L; // 800kHz, or 400kHz or 1MHz;
 	Wire.setClock(clock);
 	Serial.println("I2C bus initalized!");
 
@@ -104,7 +134,7 @@ void setup(void){
 }
 
 void loop(){
-	unsigned int eeprom; // 0x50 = 80 = 1010000
+	unsigned int eeprom; // 0x53 = 83 = 1010011
 	for(eeprom = 0x53; eeprom < 0x54; eeprom++) {
 		unsigned int address;
 		Serial.print("device ");
@@ -112,10 +142,21 @@ void loop(){
 		Serial.println("");
 
 		bip(signalPin); // signal begining of a sequence
-		for(address = 0; address < 8*1024; address++) {
+		for(address = 0; address < 256; address++) {
 			if (printRandomAddress(eeprom, address) != 0) {
 				break;
 			}
+		}
+		address = 0x00;
+		byte value = 0x20;
+		bip(signalPin); // signal begining of a sequence
+		bip(signalPin); // signal begining of a sequence
+		Serial.println("Writing...");
+		if (randomWrite(eeprom, address, value) != 0) {
+			Serial.println("Write failed!");
+		}
+		if (printRandomAddress(eeprom, address) != 0) {
+			Serial.println("Read failed!");
 		}
 	}
 }
