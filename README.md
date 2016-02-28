@@ -400,3 +400,109 @@ Same pattern:
 	Counter + 4142 + Counter
 
 => We can try to reset the counter and hope for not double checks
+
+Printer i2c commands
+====================
+
+Here is the sequence of read/write operations from the printer
+captured by a logical analyser:
+
+	$ sigrok-cli -i start_printer_failed.sr -P i2c:scl=2:sda=3,eeprom24xx
+	Control code bits: 1010
+	Address bit 2: 0
+	Address bit 1: 1
+	Address bit 0: 1
+	R/W bit: write
+	Control word
+	Warning: Slave replied, but master aborted!
+	Control code bits: 1010
+	Address bit 2: 0
+	Address bit 1: 1
+	Address bit 0: 1
+	R/W bit: write
+	Control word
+	Control code bits: 1010
+	Address bit 2: 0
+	Address bit 1: 1
+	Address bit 0: 1
+	R/W bit: read
+	Control word
+	Word address byte: 00
+	Sequential random read (addr=00, 128 bytes): 20 00 01 03 01 01
+	03 00 00 00 FF FF FF FF FF FF 15 04 4D 47 27 00 18 82 00 00 00 00 20
+	00 01 01 58 30 32 35 4D 34 33 31 35 36 36 20 00 45 00 00 00 00 00 00
+	00 00 00 00 00 00 01 06 00 00 00 00 00 00 01 07 00 00 00 00 00 00 00
+	00 00 00 00 00 00 00 00 00 00 00 01 06 20 00 01 01 20 00 01 01 00 00
+	00 00 00 00 00 00 01 06 00 00 00 00 00 00 00 0E 73 51 10 00 14 27 00
+	00 00 00 00 00 00 00
+	Control code bits: 1010
+	Address bit 2: 0
+	Address bit 1: 1
+	Address bit 0: 1
+	R/W bit: write
+	Control word
+	Word address byte: 76
+	Word address
+	Data byte 76: 14
+	Data
+	Byte write (addr=76, 1 byte): 14
+	Control code bits: 1010
+	Address bit 2: 0
+	Address bit 1: 1
+	Address bit 0: 1
+	R/W bit: write
+	Control word
+	Word address byte: 70
+	Word address
+	Data byte 70: 00
+	Data byte 71: 0E
+	Data byte 72: 75
+	Data byte 73: 45
+	Data
+	Page write (addr=70, 4 bytes): 00 0E 75 45
+	Control code bits: 1010
+	Address bit 2: 0
+	Address bit 1: 1
+	Address bit 0: 1
+	R/W bit: write
+	Control word
+	Word address byte: 70
+	Word address
+	Data byte 70: 00
+	Data byte 71: 0E
+	Data byte 72: 77
+	Data byte 73: 39
+	Data
+	Page write (addr=70, 4 bytes): 00 0E 77 39
+	Control code bits: 1010
+	Address bit 2: 0
+	Address bit 1: 1
+	Address bit 0: 1
+	R/W bit: write
+	Control word
+	Word address byte: 77
+	Word address
+	Data byte 77: 5A
+	Data
+	Byte write (addr=77, 1 byte): 5A
+	Control code bits: 1010
+	Address bit 2: 0
+	Address bit 1: 1
+	Address bit 0: 1
+	R/W bit: write
+	Control word
+	Word address byte: 70
+	Word address
+	Data byte 70: 00
+	Data byte 71: 0E
+	Data byte 72: 77
+	Data byte 73: 8D
+	Data
+	Page write (addr=70, 4 bytes): 00 0E 77 8D
+
+One sequential read of the content of the eeprom, followed by a
+sequence of write operations: 4 byte at 0x70, 1 byte at 0x76.
+
+This the printer read all the eeprom, it is difficult to figure out
+which address hold which information.
+
