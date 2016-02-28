@@ -205,93 +205,13 @@ Transform the binary data into a C array:
 	};
 	unsigned int dump_bin_len = 256;
 
-Data hypothesis
-===============
 
-From what the dirver send, the print has access to:
-	* the number of page
-	* the number of 'dot' per page
+USB packet capture
+==================
 
-The number of 'dot' per page can be sent to zero. On my computer i updated
-the driver to send the proper value. This is probably why my tonner run out
-ink so quickly: during my experiments i probably sent the wrong values.
-
-The eeprom is a simple data storage. The printer my wants to do:
-	* store their the number of printed pages and/or printed dot
-	* mark is as used by a particular printer to prevent second hand market
-	* mark the date of the first and last usage to make it out of date.
-	* the tonner may have the information of the maximum 'dot' capacity (or
-	  a count down value).
-
-Here is what could be the printer logical sequence:
-	* Power on printer
-	* Check if a tonner is present on the i2c bus:
-		* Check a device respond
-		* Verifies the magic number
-		* Check if the tonner is compatible this printer model (sp112)
-		* Check if associated with this particular printer
-			* if not associated, write the printer PN into the tonner
-	* Check if the tonner is usable:
-		* Check if the tonner is broken
-			* Read a broken information (ex: like an error code on eeprom)?
-		* Check if the tonner is too old:
-			* Read the first date of usage
-			* Read the last date of usage
-		* Check if the tonner capacity is exhausted:
-			* Read the page count
-			* Read the max page information
-			* Read the dot count
-			* Read the max dot information
-	* Set to status OK
-	* When printing a new page:
-		* Receive the date
-		* Receive all the pages in a black/white dot format
-		* For each page:
-			* Verify if the page counter is exhausted
-				* if so mark the tonner a broken (reach max pages)
-			* Verify the dot counter is exhausted
-				* if so mark the tonner a broken (reach max dots)
-			* Compare the date with the first usage
-				* if no first usage, mark this date as the first usage
-				* if first usage more than duration mark the tonner as broken (too old)
-			* Compare the date with the last usage
-				* if last usage less than continous mark the tonner as broken (too dry)
-			* Increment the dot counter
-			* Increment the last usage counter
-			* Update the last usage time
-			* Print the page
-
-From this we can imagine to see:
-	* the dot capacity
-	* the dot usage
-	* the page capacity
-	* the page usage
-	* the time of first use
-	* the time of last use
-	* one or more status register (broken information)
-
-About the dates:
-	* year/mount/day is enough
-	* if the tonner needs to warm-up, hours/minutes/seconds is also required.
-
-Unix epoch format seems well suited for this need (no calendar juggling).
-Here is an example of a date in hexadecimal values:
-
-	$ date --date='@1456056478'
-	Sun Feb 21 13:07:58 CET 2016
-	$ echo "obase=16; 1456056478" | bc
-	56C9A89E
-
-32 bits is enough to live until 2038, which certainly exceeded the expected
-life of such product.
-
-Part number: 407431 (0x63787)
-http://www.cnet.com/products/ricoh-sp-112-printer-monochrome-laser/specs/
-
-Similar part number can be seen in the following dump (407166):
-http://www.mikrocontroller.net/topic/369267
-
-Example of data sent to the printer:
+Here is an example of USB command sent by the proprietary windows
+driver to the printer (captured with tcpdump when running windows
+inside qemu):
 
 	%-12345X@PJL
 	@PJL SET TIMESTAMP=2015/09/14 21:15:14
@@ -315,6 +235,97 @@ Example of data sent to the printer:
 	@PJL EOJ
 	%-12345X
 
+
+Data hypothesis
+===============
+
+From what the dirver send, the print has access to:
+
+* the number of page
+* the number of 'dot' per page
+
+The number of 'dot' per page can be sent to zero. On my computer i updated
+the driver to send the proper value. This is probably why my tonner run out
+ink so quickly: during my experiments i probably sent the wrong values.
+
+The eeprom is a simple data storage. The printer might wants to:
+
+* store the number of printed pages and/or the number of printed dot
+* mark is as used by a particular printer to prevent second hand market
+* mark the date of the first and last usage to make it out of date.
+* the tonner may have the information of the maximum 'dot' capacity (or
+  a count down value).
+
+Here is what could be the printer logical sequence:
+
+* Power on printer
+* Check if a tonner is present on the i2c bus:
+	* Check a device respond
+	* Verifies the magic number
+	* Check if the tonner is compatible this printer model (sp112)
+	* Check if associated with this particular printer
+		* if not associated, write the printer PN into the tonner
+* Check if the tonner is usable:
+	* Check if the tonner is broken
+		* Read a broken information (ex: like an error code on eeprom)?
+	* Check if the tonner is too old:
+		* Read the first date of usage
+		* Read the last date of usage
+	* Check if the tonner capacity is exhausted:
+		* Read the page count
+		* Read the max page information
+		* Read the dot count
+		* Read the max dot information
+* Set to status OK
+* When printing a new page:
+	* Receive the date
+	* Receive all the pages in a black/white dot format
+	* For each page:
+		* Verify if the page counter is exhausted
+			* if so mark the tonner a broken (reach max pages)
+		* Verify the dot counter is exhausted
+			* if so mark the tonner a broken (reach max dots)
+		* Compare the date with the first usage
+			* if no first usage, mark this date as the first usage
+			* if first usage more than duration mark the tonner as broken (too old)
+		* Compare the date with the last usage
+			* if last usage less than continous mark the tonner as broken (too dry)
+		* Increment the dot counter
+		* Increment the last usage counter
+		* Update the last usage time
+		* Print the page
+
+From this we can imagine to see:
+
+* the dot capacity
+* the dot usage
+* the page capacity
+* the page usage
+* the time of first use
+* the time of last use
+* one or more status register (broken information)
+
+About the dates:
+
+* year/mount/day is enough
+* if the tonner needs to warm-up, hours/minutes/seconds is also required.
+
+Unix epoch format seems well suited for this need (no calendar juggling).
+Here is an example of a date in hexadecimal values:
+
+	$ date --date='@1456056478'
+	Sun Feb 21 13:07:58 CET 2016
+	$ echo "obase=16; 1456056478" | bc
+	56C9A89E
+
+32 bits is enough to live until 2038, which certainly exceeded the expected
+life of such product.
+
+Part number: 407431 (0x63787)
+http://www.cnet.com/products/ricoh-sp-112-printer-monochrome-laser/specs/
+
+Similar part number can be seen in the following dump (407166):
+http://www.mikrocontroller.net/topic/369267
 
 
 	00000000: 2000 0103 0101 0300 0000 ffff ffff ffff   ...............
@@ -362,6 +373,7 @@ Example of data sent to the printer:
 From another ricoh printer:
 
 Black:
+
 	00000000: a800 0103 1201 01ff 6400 3430 3735 3433  ........d.407543
 	00000010: 1409 4142 1600 1626 ffff ffff ffff ffff  ..AB...&........
 	00000020: ffff ffff ffff ffff ffff ffff 6400 0000  ............d...
@@ -372,6 +384,7 @@ Black:
 	00000070: ffff ffff ffff ffff 0000 0000 0000 0000  ................
 
 Magenta:
+
 	00000000: a800 0103 0e03 01ff 6400 3430 3735 3435  ........d.407545
 	00000010: 1501 4142 1800 0372 ffff ffff ffff ffff  ..AB...r........
 	00000020: ffff ffff ffff ffff ffff ffff 6400 0000  ............d...
@@ -382,6 +395,7 @@ Magenta:
 	00000070: ffff ffff ffff ffff 0000 0000 0000 0000  ................
 
 Same pattern:
+
 	Magic + printer part number
 	Counter + 4142 + Counter
 

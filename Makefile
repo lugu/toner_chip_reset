@@ -23,3 +23,9 @@ F_CPU = 16000000L
 
 # include /usr/share/arduino/Arduino.mk
 include /home/ludo/src/Arduino-Makefile/Arduino.mk
+
+dump.bin: dump.txt
+	cat dump.txt | xargs printf "%02x\n" | xxd -c 1 -p -r > dump.bin
+
+dump_bin.h: dump.bin
+	xxd -i dump.bin > dump_bin.h
