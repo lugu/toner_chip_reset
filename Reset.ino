@@ -2,7 +2,7 @@
 #include <Wire.h>
 
 // dump.h define the content to flash to the eeprom
-#include "dump.h"
+#include "dump_bin.h"
 
 int signalPin = 30; // use this pin to time sequences
 
@@ -142,7 +142,8 @@ void loop(){
 		unsigned int address;
 		Serial.print("reading device ");
 		Serial.print(eeprom, HEX);
-		Serial.println("");
+		Serial.println("copy the following into: dump.h");
+		Serial.println("byte dump[] = {");
 
 		bip(signalPin); // signal begining of a sequence
 		for(address = 0; address < 256; address++) {
@@ -150,13 +151,14 @@ void loop(){
 				break;
 			}
 		}
+		Serial.println("};");
 		bip(signalPin); // signal begining of a sequence
 		bip(signalPin); // signal begining of a sequence
 		Serial.print("writing device ");
 		Serial.print(eeprom, HEX);
 		Serial.println("");
-		for(address = 0; address < 256; address++) {
-			if (randomWrite(eeprom, address, dump[address]) != 0) {
+		for(address = 0; address < dump_bin_len; address++) {
+			if (randomWrite(eeprom, address, dump_bin[address]) != 0) {
 				Serial.println("Write failed!");
 			}
 		}
