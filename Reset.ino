@@ -121,7 +121,7 @@ unsigned int printRandomAddress(int eeprom, unsigned int address) {
 	return 0;
 }
 
-void init(void) {
+void initialize(void) {
 	Serial.begin(115200);
 	while (!Serial.available()) {
 		; // wait for serial port to connect
@@ -135,34 +135,56 @@ void init(void) {
 	pinMode(signalPin, OUTPUT);
 }
 
-void work(void) {
-	unsigned int eeprom = 0x53; // 0x53 = 83 = 1010011
+void eepromRead(unsigned int eeprom) {
 
 	Serial.print("reading device ");
 	Serial.print(eeprom, HEX);
+	Serial.println("");
 
-	bip(signalPin); // signal begining of a sequence
+	bip(signalPin); // signal begining of a read sequence
 
 	unsigned int address;
 	for(address = 0; address < 256; address++) {
 		if (printRandomAddress(eeprom, address) != 0) {
+			Serial.print("Read failed at ");
+			Serial.print(address, HEX);
+			Serial.println("!");
 			break;
 		}
 	}
-	bip(signalPin); // signal begining of a sequence
-	bip(signalPin); // signal begining of a sequence
+	Serial.println("read end.");
+}
+
+void eepromWrite(unsigned int eeprom) {
+
 	Serial.print("writing device ");
 	Serial.print(eeprom, HEX);
 	Serial.println("");
+
+	bip(signalPin); // signal begining of a write sequence
+	bip(signalPin); // signal begining of a write sequence
+
+	unsigned int address;
 	for(address = 0; address < dump_bin_len; address++) {
 		if (randomWrite(eeprom, address, dump_bin[address]) != 0) {
-			Serial.println("Write failed!");
+			Serial.print("Write failed at ");
+			Serial.print(address, HEX);
+			Serial.println("!");
+			break;
 		}
 	}
+	Serial.println("write finished.");
+}
+
+void work(void) {
+	unsigned int eeprom = 0x53; // 0x53 = 83 = 1010011
+	eepromRead(eeprom);
+	eepromWrite(eeprom);
+	eepromRead(eeprom);
 }
 
 void setup(void){
-	init();
+	initialize();
 	work();
 }
 

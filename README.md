@@ -330,36 +330,36 @@ http://www.mikrocontroller.net/topic/369267
 
 	00000000: 2000 0103 0101 0300 0000 ffff ffff ffff   ...............
 		  ^^^^ ^^^^ ^^^^ ^^^^      ^^^^ ^^^^ ^^^^
-		  header                   seems later erase with PN
+		  header                   printer crash if 0x00
 
 	00000010: 1504 4d47 2700 1882 0000 0000 2000 0101  ..MG'....... ...
 		  ^^^^           ^^^^
 		  increase between two prints
 
 	00000020: 5830 3235 4d34 3331 3536 3620 0045 0000  X025M431566 .E..
-		  ^^^^ ^^^^ ^^^^ ^^^^ ^^^^ ^^^^ ^^^^
-                  model number for compatibility
+		  ^^^^ ^^^^ ^^^^ ^^^^ ^^^^ ^^^^
+                  written by printer
 
 
 	00000030: 0000 0000 0000 0000 0000 0106 0000 0000  ................
 		                           ^^^^
-		                           increase between two prints
+		                           written by printer
 
 	00000040: 0000 0107 0000 0000 0000 0000 0000 0000  ................
 		       ^^^^
 		       increase between two prints
 
 	00000050: 0000 0000 0000 0106 2000 0101 2000 0101  ........ ... ...
-		                 ^^^^
-		                 increase between two prints
+		                      ^^^^ ^^^^
+		                      written by printer
 
 	00000060: 0000 0000 0000 0000 0106 0000 0000 0000  ................
 		                      ^^^^
 		                      increase between two prints
 
 	00000070: 000e 715d 1000 1427 0000 0000 0000 0000  ..q]...'........
-		    ^^ ^^^^ ^^^^ ^^^^
-		    increase between two prints
+		       ^^^^ ^^^^ ^^^^
+		       increase between two prints
 
 	00000080: ffff ffff ffff ffff ffff ffff ffff ffff  ................
 	00000090: ffff ffff ffff ffff ffff ffff ffff ffff  ................
@@ -505,4 +505,12 @@ sequence of write operations: 4 byte at 0x70, 1 byte at 0x76.
 
 This the printer read all the eeprom, it is difficult to figure out
 which address hold which information.
+
+
+Read 0x0 to 0xFF
+Write 0x76: 64
+Write 0x70: 00 00 01 F4
+Write 0x70: 00 00 03 E8
+Write 0x77: 33
+Write 0x70: 00 00 04 C3
 
