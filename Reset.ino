@@ -1,20 +1,11 @@
 
 #include <Wire.h>
 
-// the content to flash on the eeprom to reset the chip
-// this includes the definition of:
+// the content to flash on the eeprom to reset the chip.
+// defines:
 // 	* unsigned int dump_bin_len;
 // 	* unsigned char dump_bin[];
 #include "reset_bin.h"
-
-int signalPin = 30; // use this pin to time sequences
-
-// swith on/off n times the digital pin
-void bip(unsigned int pin) {
-	digitalWrite(pin, HIGH);
-	delayMicroseconds(2);
-	digitalWrite(pin, LOW);
-}
 
 // Set current address:
 //	master send start condition
@@ -22,6 +13,7 @@ void bip(unsigned int pin) {
 //	master send data address
 //	master send start condition
 unsigned int setCurrentAddress(int eeprom, unsigned int address) {
+
 	Wire.beginTransmission(eeprom);
 
 	byte size = Wire.write(address);
@@ -73,6 +65,7 @@ unsigned int printCurrentAddress(int eeprom) {
 // 	master send data
 // 	master send stop condition
 unsigned int randomWrite(int eeprom, unsigned int address, byte data) {
+
 	Wire.beginTransmission(eeprom);
 
 	byte size = Wire.write(address);
@@ -124,30 +117,15 @@ unsigned int printRandomAddress(int eeprom, unsigned int address) {
 	return 0;
 }
 
-void initialize(void) {
-	Serial.begin(115200);
-	while (!Serial.available()) {
-		; // wait for serial port to connect
-	}
-	Serial.println("Let's start!");
-	Wire.begin();
-	unsigned int clock = 800000L; // 800kHz, or 400kHz or 1MHz;
-	Wire.setClock(clock);
-	Serial.println("I2C bus initalized!");
-
-	pinMode(signalPin, OUTPUT);
-}
-
+// display the content of the eeprom
 void eepromRead(unsigned int eeprom) {
 
 	Serial.print("reading device ");
 	Serial.print(eeprom, HEX);
 	Serial.println("");
 
-	bip(signalPin); // signal begining of a read sequence
-
 	unsigned int address;
-	for(address = 0; address < 256; address++) {
+	for (address = 0; address < 256; address++) {
 		if (printRandomAddress(eeprom, address) != 0) {
 			Serial.print("Read failed at ");
 			Serial.print(address, HEX);
@@ -158,18 +136,17 @@ void eepromRead(unsigned int eeprom) {
 	Serial.println("read end.");
 }
 
-void eepromWrite(unsigned int eeprom) {
+// erase the content of the eeprom
+void eepromWrite(unsigned int eeprom, unsigned char data[],
+		unsigned int data_length) {
 
 	Serial.print("writing device ");
 	Serial.print(eeprom, HEX);
 	Serial.println("");
 
-	bip(signalPin); // signal begining of a write sequence
-	bip(signalPin); // signal begining of a write sequence
-
 	unsigned int address;
-	for(address = 0; address < dump_bin_len; address++) {
-		if (randomWrite(eeprom, address, dump_bin[address]) != 0) {
+	for (address = 0; address < data_length; address++) {
+		if (randomWrite(eeprom, address, data[address]) != 0) {
 			Serial.print("Write failed at ");
 			Serial.print(address, HEX);
 			Serial.println("!");
@@ -179,17 +156,41 @@ void eepromWrite(unsigned int eeprom) {
 	Serial.println("write finished.");
 }
 
+// initialize serial connection and wait for user input.
+// initialize i2c bus after user input.
+void initialize(void) {
+
+	Serial.begin(115200);
+	while (!Serial.available()) {
+		; // wait for serial port to connect
+	}
+	Serial.println("Let's start!");
+
+	// define the i2c bus speed
+	// 400kHz, 800kHz or 1MHz
+	unsigned int clock = 800000L;
+
+	Wire.begin();
+	Wire.setClock(clock);
+	Serial.println("I2C bus initalized!");
+}
+
+// erase the content of the eeprom with the value of
 void work(void) {
-	unsigned int eeprom = 0x53; // 0x53 = 83 = 1010011
+
+	// eeprom address on the i2c bus
+	// 0x53 = 83 = 1010011 = 1010 A0=0 A1=1 A2=1
+	unsigned int eeprom = 0x53;
+
 	eepromRead(eeprom);
-	eepromWrite(eeprom);
+	eepromWrite(eeprom, dump_bin, dump_bin_len);
 	eepromRead(eeprom);
 }
 
-void setup(void){
+void setup(void) {
+
 	initialize();
 	work();
 }
 
-void loop(){
-}
+void loop() {}
