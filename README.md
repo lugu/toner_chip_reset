@@ -27,14 +27,14 @@ Done
 * Analyse the EEPROM dump
 * Make a data hypothesis
 * Verify the write function
-
-Todo
-=====
-
 * Dump a new reset chip
 * Write the EEPROM with a dump of a new reset chip
 * Test with the printer
 
+Todo
+=====
+
+* Write an article about this
 
 Connections
 ===========
