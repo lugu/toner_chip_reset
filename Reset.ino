@@ -1,8 +1,11 @@
 
 #include <Wire.h>
 
-// dump.h define the content to flash to the eeprom
-#include "dump_bin.h"
+// the content to flash on the eeprom to reset the chip
+// this includes the definition of:
+// 	* unsigned int dump_bin_len;
+// 	* unsigned char dump_bin[];
+#include "reset_bin.h"
 
 int signalPin = 30; // use this pin to time sequences
 
