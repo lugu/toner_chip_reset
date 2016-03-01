@@ -1,51 +1,51 @@
 
-Install
-=======
 
-	make
-	make upload
-	picocom -b 115200 /dev/ttyACM0
 
-Done
-====
-
-* Create arduino hello world
-* Read internal EEPROM
-* Draw the cricuit
-* Understand the cricuit
-* Try i2c clock at 400kHz and 1MHz
-* Scan for device => use MultiSpeedScanner
-* Analyse I2C trame with a logical analyser
-* Visualize I2C packets with pulseview
-* Read one EEPROM datasheet
-* Debug i2c addresses sent (1010001 and not 0101000) ~ frequence to high
-* Verifies the timming between read and write operations (5ms)
-* Find the exact EEPROM chip model
-* Find the EEPROM address (0x53)
-* Read the EPPROM chip
-* Order sp112 reset chip from internet
-* Analyse the EEPROM dump
-* Make a data hypothesis
-* Verify the write function
-* Dump a new reset chip
-* Write the EEPROM with a dump of a new reset chip
-* Test with the printer
-
-Todo
+Usage
 =====
 
-* Write an article about this
+	$ make
+	$ make upload
+	$ picocom -b 115200 /dev/ttyACM0
+
+Todo
+====
+
+[*] Create arduino hello world
+[*] Read internal EEPROM
+[*] Draw the cricuit
+[*] Understand the cricuit
+[*] Try i2c clock at 400kHz and 1MHz
+[*] Scan for device => use MultiSpeedScanner
+[*] Analyse I2C trame with a logical analyser
+[*] Visualize I2C packets with pulseview
+[*] Read one EEPROM datasheet
+[*] Debug i2c addresses sent (1010001 and not 0101000) ~ frequence to high
+[*] Verifies the timming between read and write operations (5ms)
+[*] Find the exact EEPROM chip model
+[*] Find the EEPROM address (0x53)
+[*] Read the EPPROM chip
+[*] Order sp112 reset chip from internet
+[*] Analyse the EEPROM dump
+[*] Make a data hypothesis
+[*] Verify the write function
+[*] Dump a new reset chip
+[*] Write the EEPROM with a dump of a new reset chip
+[*] Test with the printer
+[ ] Learn about README.md format (image insertion & style)
+[ ] Write an article about this
 
 Connections
 ===========
 
 Depending on the board the i2c pins are:
 
-	Board           I2C / TWI pins
-	Uno, Ethernet   A4 (SDA), A5 (SCL)
-	Mega2560        20 (SDA), 21 (SCL)
-	Leonardo        2 (SDA), 3 (SCL)
-	Due             20 (SDA), 21 (SCL), SDA1, SCL1
+| Board         |   I2C / TWI pins                 |
+| :--:          | :--:                             |
+| Uno, Ethernet |   A4 (SDA), A5 (SCL)             |
+| Mega2560      |   20 (SDA), 21 (SCL)             |
+| Leonardo      |   2 (SDA), 3 (SCL)               |
+| Due           |   20 (SDA), 21 (SCL), SDA1, SCL1 |
 
 
 Address
@@ -60,23 +60,6 @@ A2 = 0
 1010011 = 83
 
 A0, A1, A2 can be not used if the eeprom has more than 2K memory.
-
-
-Read operation
-==============
-
-Sequence for random read:
-
-	master send start condition
-	master send eeprom address + read bit
-	master send data address
-	master send start condition
-	master send eeprom address + read bit
-	device respond with data
-	master send stop condition
-
-STOP condition mandatory between writes.
-Write cycle: 5 ms.
 
 
 Bus frequency
@@ -101,6 +84,22 @@ This discussion highligth the max frequence an Arduino Mega can reach.
 http://electronics.stackexchange.com/questions/29457/how-to-make-arduino-do-high-speed-i2c
 
 Setting the clocks to 800kHz works just fine.
+
+Read operation
+==============
+
+Sequence for random read:
+
+	master send start condition
+	master send eeprom address + read bit
+	master send data address
+	master send start condition
+	master send eeprom address + read bit
+	device respond with data
+	master send stop condition
+
+STOP condition mandatory between writes.
+Write cycle: 5 ms.
 
 Links
 =====
@@ -407,6 +406,7 @@ Printer i2c commands
 Here is the sequence of read/write operations from the printer
 captured by a logical analyser:
 
+```sh
 	$ sigrok-cli -i start_printer_failed.sr -P i2c:scl=2:sda=3,eeprom24xx
 	Control code bits: 1010
 	Address bit 2: 0
@@ -499,6 +499,7 @@ captured by a logical analyser:
 	Data byte 73: 8D
 	Data
 	Page write (addr=70, 4 bytes): 00 0E 77 8D
+```
 
 One sequential read of the content of the eeprom, followed by a
 sequence of write operations: 4 byte at 0x70, 1 byte at 0x76.
