@@ -13,27 +13,27 @@ Usage
 Todo
 ====
 
-- [*] Create arduino hello world
-- [*] Read internal EEPROM
-- [*] Draw the cricuit
-- [*] Understand the cricuit
-- [*] Try i2c clock at 400kHz and 1MHz
-- [*] Scan for device => use MultiSpeedScanner
-- [*] Analyse I2C trame with a logical analyser
-- [*] Visualize I2C packets with pulseview
-- [*] Read one EEPROM datasheet
-- [*] Debug i2c addresses sent (1010001 and not 0101000) ~ frequence to high
-- [*] Verifies the timming between read and write operations (5ms)
-- [*] Find the exact EEPROM chip model
-- [*] Find the EEPROM address (0x53)
-- [*] Read the EPPROM chip
-- [*] Order sp112 reset chip from internet
-- [*] Analyse the EEPROM dump
-- [*] Make a data hypothesis
-- [*] Verify the write function
-- [*] Dump a new reset chip
-- [*] Write the EEPROM with a dump of a new reset chip
-- [*] Test with the printer
+- [x] Create arduino hello world
+- [x] Read internal EEPROM
+- [x] Draw the cricuit
+- [x] Understand the cricuit
+- [x] Try i2c clock at 400kHz and 1MHz
+- [x] Scan for device => use MultiSpeedScanner
+- [x] Analyse I2C trame with a logical analyser
+- [x] Visualize I2C packets with pulseview
+- [x] Read one EEPROM datasheet
+- [x] Debug i2c addresses sent (1010001 and not 0101000) ~ frequence to high
+- [x] Verifies the timming between read and write operations (5ms)
+- [x] Find the exact EEPROM chip model
+- [x] Find the EEPROM address (0x53)
+- [x] Read the EPPROM chip
+- [x] Order sp112 reset chip from internet
+- [x] Analyse the EEPROM dump
+- [x] Make a data hypothesis
+- [x] Verify the write function
+- [x] Dump a new reset chip
+- [x] Write the EEPROM with a dump of a new reset chip
+- [x] Test with the printer
 - [ ] Learn about README.md format (image insertion & style)
 - [ ] Write an article about this
 
