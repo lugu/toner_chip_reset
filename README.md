@@ -4,36 +4,38 @@
 Usage
 =====
 
+```sh
 	$ make
 	$ make upload
 	$ picocom -b 115200 /dev/ttyACM0
+```
 
 Todo
 ====
 
-[*] Create arduino hello world
-[*] Read internal EEPROM
-[*] Draw the cricuit
-[*] Understand the cricuit
-[*] Try i2c clock at 400kHz and 1MHz
-[*] Scan for device => use MultiSpeedScanner
-[*] Analyse I2C trame with a logical analyser
-[*] Visualize I2C packets with pulseview
-[*] Read one EEPROM datasheet
-[*] Debug i2c addresses sent (1010001 and not 0101000) ~ frequence to high
-[*] Verifies the timming between read and write operations (5ms)
-[*] Find the exact EEPROM chip model
-[*] Find the EEPROM address (0x53)
-[*] Read the EPPROM chip
-[*] Order sp112 reset chip from internet
-[*] Analyse the EEPROM dump
-[*] Make a data hypothesis
-[*] Verify the write function
-[*] Dump a new reset chip
-[*] Write the EEPROM with a dump of a new reset chip
-[*] Test with the printer
-[ ] Learn about README.md format (image insertion & style)
-[ ] Write an article about this
+- [*] Create arduino hello world
+- [*] Read internal EEPROM
+- [*] Draw the cricuit
+- [*] Understand the cricuit
+- [*] Try i2c clock at 400kHz and 1MHz
+- [*] Scan for device => use MultiSpeedScanner
+- [*] Analyse I2C trame with a logical analyser
+- [*] Visualize I2C packets with pulseview
+- [*] Read one EEPROM datasheet
+- [*] Debug i2c addresses sent (1010001 and not 0101000) ~ frequence to high
+- [*] Verifies the timming between read and write operations (5ms)
+- [*] Find the exact EEPROM chip model
+- [*] Find the EEPROM address (0x53)
+- [*] Read the EPPROM chip
+- [*] Order sp112 reset chip from internet
+- [*] Analyse the EEPROM dump
+- [*] Make a data hypothesis
+- [*] Verify the write function
+- [*] Dump a new reset chip
+- [*] Write the EEPROM with a dump of a new reset chip
+- [*] Test with the printer
+- [ ] Learn about README.md format (image insertion & style)
+- [ ] Write an article about this
 
 Connections
 ===========
@@ -65,25 +67,15 @@ A0, A1, A2 can be not used if the eeprom has more than 2K memory.
 Bus frequency
 =============
 
-The datasheet of the component FM24C02B indicate an operating clock of 1MHz
-at 3.3V.
+The [datasheet](/datasheet/FM24C02B-04B-08B-16B.pdf) of the component
+FM24C02B indicate an operating clock of 1MHz at 3.3V.
 
-At 1MHz, no address respond correctly, as well the logical analyser show
-strange data passing. Especially it decoded wrong addresses.
-
-	device 50
-	receive NAK failed to set current address
-
-	device 51
-	no data available from device
-	failed to read current address
-
-This discussion highligth the max frequence an Arduino Mega can reach.
-1MHz seems to be the upper bound.
+At 1MHz, no address respond correctly because the Arduino can not
+operate at this clock: 1MHz seems to be the upper bound of the Arduino Mega can reach. 
 
 http://electronics.stackexchange.com/questions/29457/how-to-make-arduino-do-high-speed-i2c
 
-Setting the clocks to 800kHz works just fine.
+Finally, setting the clocks to 800kHz works just fine.
 
 Read operation
 ==============
