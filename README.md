@@ -1,5 +1,5 @@
 
-This project explains you how to reset your tonner chip with an
+This project explains you how to reset your toner chip with an
 Arduino.
 
 Introduction
@@ -31,28 +31,28 @@ black dots in the images. I wasn't sure what this is for but for the
 sake of completeness, i added it to the driver.
 
 Unfortunatly, after a few more prints, the printer failed indicating
-that I must change the tonner. On this printer, like on many other,
-the tonner is not just a bag of ink, it includes mechanical part and
+that I must change the toner. On this printer, like on many other,
+the toner is not just a bag of ink, it includes mechanical part and
 even a small electronic circuit.
 
-The best price online for an SP112 tonner was 35 euros! Well, this is
+The best price online for an SP112 toner was 35 euros! Well, this is
 184% of the price of the printer. No way i am going to spend that much
 for a 20 bucks printer. And no way i am going to buy a new printer
-each time the tonner get empty.
+each time the toner get empty.
 
-When i opened to tonner, i realized it is full of pouder ink. It was
-not empty as the printer says. And the tonner by itself had no sensor
+When i opened to toner, i realized it is full of pouder ink. It was
+not empty as the printer says. And the toner by itself had no sensor
 to detect the ink level. At this stage i realized why this "dot count"
 was sent : it is used to tell this dummy printer how much ink would be
 consumed.
 
-[Picture of tonner](images/sp112-tonner.png)
+[Picture of toner](/images/sp112_toner.png)
 
-On this picture of the tonner, there is a chip, often refered as
-_tonner reset chip_. This chip is composed of a simple i2c eeprom.
+On this picture of the toner, there is a chip, often refered as
+_toner reset chip_. This chip is composed of a simple i2c eeprom.
 
-[Front chip](images/front-circuit.png)
-[Front chip](images/back-circuit.png)
+[Front chip](/images/front_circuit.png)
+[Front chip](/images/back_circuit.png)
 
 
 This project is about reading and writing this chip.
@@ -267,7 +267,7 @@ From what the dirver send, the print has access to:
 * the number of 'dot' per page
 
 The number of 'dot' per page can be sent to zero. On my computer i updated
-the driver to send the proper value. This is probably why my tonner run out
+the driver to send the proper value. This is probably why my toner run out
 ink so quickly: during my experiments i probably sent the wrong values.
 
 The eeprom is a simple data storage. The printer might wants to:
@@ -275,25 +275,25 @@ The eeprom is a simple data storage. The printer might wants to:
 * store the number of printed pages and/or the number of printed dot
 * mark is as used by a particular printer to prevent second hand market
 * mark the date of the first and last usage to make it out of date.
-* the tonner may have the information of the maximum 'dot' capacity (or
+* the toner may have the information of the maximum 'dot' capacity (or
   a count down value).
 
 Here is what could be the printer logical sequence:
 
 * Power on printer
-* Check if a tonner is present on the i2c bus:
+* Check if a toner is present on the i2c bus:
 	* Check a device respond
 	* Verifies the magic number
-	* Check if the tonner is compatible this printer model (sp112)
+	* Check if the toner is compatible this printer model (sp112)
 	* Check if associated with this particular printer
-		* if not associated, write the printer PN into the tonner
-* Check if the tonner is usable:
-	* Check if the tonner is broken
+		* if not associated, write the printer PN into the toner
+* Check if the toner is usable:
+	* Check if the toner is broken
 		* Read a broken information (ex: like an error code on eeprom)?
-	* Check if the tonner is too old:
+	* Check if the toner is too old:
 		* Read the first date of usage
 		* Read the last date of usage
-	* Check if the tonner capacity is exhausted:
+	* Check if the toner capacity is exhausted:
 		* Read the page count
 		* Read the max page information
 		* Read the dot count
@@ -304,14 +304,14 @@ Here is what could be the printer logical sequence:
 	* Receive all the pages in a black/white dot format
 	* For each page:
 		* Verify if the page counter is exhausted
-			* if so mark the tonner a broken (reach max pages)
+			* if so mark the toner a broken (reach max pages)
 		* Verify the dot counter is exhausted
-			* if so mark the tonner a broken (reach max dots)
+			* if so mark the toner a broken (reach max dots)
 		* Compare the date with the first usage
 			* if no first usage, mark this date as the first usage
-			* if first usage more than duration mark the tonner as broken (too old)
+			* if first usage more than duration mark the toner as broken (too old)
 		* Compare the date with the last usage
-			* if last usage less than continous mark the tonner as broken (too dry)
+			* if last usage less than continous mark the toner as broken (too dry)
 		* Increment the dot counter
 		* Increment the last usage counter
 		* Update the last usage time
@@ -330,7 +330,7 @@ From this we can imagine to see:
 About the dates:
 
 * year/mount/day is enough
-* if the tonner needs to warm-up, hours/minutes/seconds is also required.
+* if the toner needs to warm-up, hours/minutes/seconds is also required.
 
 Unix epoch format seems well suited for this need (no calendar juggling).
 Here is an example of a date in hexadecimal values:
