@@ -1,5 +1,5 @@
 
-This project explains you how to write your tonner reset chip with an
+This project explains you how to reset your tonner chip with an
 Arduino.
 
 Introduction
@@ -46,13 +46,13 @@ to detect the ink level. At this stage i realized why this "dot count"
 was sent : it is used to tell this dummy printer how much ink would be
 consumed.
 
-![Picture of tonner](/images/sp112-tonner.png)
+[Picture of tonner](images/sp112-tonner.png)
 
 On this picture of the tonner, there is a chip, often refered as
 _tonner reset chip_. This chip is composed of a simple i2c eeprom.
 
-![Front chip](/images/front-circuit.png)
-![Front chip](/images/back-circuit.png)
+[Front chip](images/front-circuit.png)
+[Front chip](images/back-circuit.png)
 
 
 This project is about reading and writing this chip.
