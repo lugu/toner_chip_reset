@@ -1,5 +1,61 @@
 
+This project explains you how to write your tonner reset chip with an
+Arduino.
 
+Introduction
+============
+
+Few months ago i found this super promotion : a Laser printer for 19
+euros. I never had a laster printer so I told myself:
+
+> "a *Laser* printer, i am going to save some savings here!".
+
+I could not have been more wrong!
+
+When i received it i quickly realize it is a
+[GDI printer](http://www.openprinting.org/printer/Generic/Generic-GDI_Printer)
+and there is not driver for Linux :(
+
+To quote Wikipedia:
+
+> A GDI printer or Winprinter (analogous to a Winmodem) is a printer
+> designed to accept output from a host computer running the GDI under
+> Windows.
+
+So i started an adventure with qemu, tcpdump, cups filters and image
+magick and after a few nights on it, i could proudly print on Linux.
+
+One thing the Linux driver was missing was the "dot count". This is a
+value sent by the PC host to the number to indicate the number of
+black dots in the images. I wasn't sure what this is for but for the
+sake of completeness, i added it to the driver.
+
+Unfortunatly, after a few more prints, the printer failed indicating
+that I must change the tonner. On this printer, like on many other,
+the tonner is not just a bag of ink, it includes mechanical part and
+even a small electronic circuit.
+
+The best price online for an SP112 tonner was 35 euros! Well, this is
+184% of the price of the printer. No way i am going to spend that much
+for a 20 bucks printer. And no way i am going to buy a new printer
+each time the tonner get empty.
+
+When i opened to tonner, i realized it is full of pouder ink. It was
+not empty as the printer says. And the tonner by itself had no sensor
+to detect the ink level. At this stage i realized why this "dot count"
+was sent : it is used to tell this dummy printer how much ink would be
+consumed.
+
+![Picture of tonner](/images/sp112-tonner.png)
+
+On this picture of the tonner, there is a chip, often refered as
+_tonner reset chip_. This chip is composed of a simple i2c eeprom.
+
+![Front chip](/images/front-circuit.png)
+![Front chip](/images/back-circuit.png)
+
+
+This project is about reading and writing this chip.
 
 Usage
 =====
@@ -9,33 +65,6 @@ Usage
 	$ make upload
 	$ picocom -b 115200 /dev/ttyACM0
 ```
-
-Todo
-====
-
-- [x] Create arduino hello world
-- [x] Read internal EEPROM
-- [x] Draw the cricuit
-- [x] Understand the cricuit
-- [x] Try i2c clock at 400kHz and 1MHz
-- [x] Scan for device => use MultiSpeedScanner
-- [x] Analyse I2C trame with a logical analyser
-- [x] Visualize I2C packets with pulseview
-- [x] Read one EEPROM datasheet
-- [x] Debug i2c addresses sent (1010001 and not 0101000) ~ frequence to high
-- [x] Verifies the timming between read and write operations (5ms)
-- [x] Find the exact EEPROM chip model
-- [x] Find the EEPROM address (0x53)
-- [x] Read the EPPROM chip
-- [x] Order sp112 reset chip from internet
-- [x] Analyse the EEPROM dump
-- [x] Make a data hypothesis
-- [x] Verify the write function
-- [x] Dump a new reset chip
-- [x] Write the EEPROM with a dump of a new reset chip
-- [x] Test with the printer
-- [ ] Learn about README.md format (image insertion & style)
-- [ ] Write an article about this
 
 Connections
 ===========
@@ -70,8 +99,10 @@ Bus frequency
 The [datasheet](/datasheet/FM24C02B-04B-08B-16B.pdf) of the component
 FM24C02B indicate an operating clock of 1MHz at 3.3V.
 
-At 1MHz, no address respond correctly because the Arduino can not
-operate at this clock: 1MHz seems to be the upper bound of the Arduino Mega can reach. 
+At 1MHz, bits are not sent correctly to i2c bus (i checked using a
+logical analyser operating at 8MHz). This is because the Arduino can
+not operate at this clock: 1MHz seems to be the upper bound of the
+Arduino Mega can reach.
 
 http://electronics.stackexchange.com/questions/29457/how-to-make-arduino-do-high-speed-i2c
 
@@ -507,3 +538,30 @@ Write 0x70: 00 00 03 E8
 Write 0x77: 33
 Write 0x70: 00 00 04 C3
 
+
+Todo
+====
+
+- [x] Create arduino hello world
+- [x] Read internal EEPROM
+- [x] Draw the cricuit
+- [x] Understand the cricuit
+- [x] Try i2c clock at 400kHz and 1MHz
+- [x] Scan for device => use MultiSpeedScanner
+- [x] Analyse I2C trame with a logical analyser
+- [x] Visualize I2C packets with pulseview
+- [x] Read one EEPROM datasheet
+- [x] Debug i2c addresses sent (1010001 and not 0101000) ~ frequence to high
+- [x] Verifies the timming between read and write operations (5ms)
+- [x] Find the exact EEPROM chip model
+- [x] Find the EEPROM address (0x53)
+- [x] Read the EPPROM chip
+- [x] Order sp112 reset chip from internet
+- [x] Analyse the EEPROM dump
+- [x] Make a data hypothesis
+- [x] Verify the write function
+- [x] Dump a new reset chip
+- [x] Write the EEPROM with a dump of a new reset chip
+- [x] Test with the printer
+- [ ] Learn about README.md format (image insertion & style)
+- [ ] Write an article about this
