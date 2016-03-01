@@ -46,7 +46,7 @@ to detect the ink level. At this stage i realized why this "dot count"
 was sent : it is used to tell this dummy printer how much ink would be
 consumed.
 
-![Picture of toner](/images/sp112_toner.jpg)
+![Picture of toner](/images/sp112_toner.png)
 
 On this picture of the toner, there is a chip, often refered as
 _toner reset chip_. This chip is composed of a simple i2c eeprom.
