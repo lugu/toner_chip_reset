@@ -1,18 +1,15 @@
 
-This project explains you how to reset your toner chip with an
-Arduino.
+This is a tutorial to reset your toner chip with an Arduino.
 
-Introduction
-============
+Background
+==========
 
-Few months ago i found this super promotion : a Laser printer for 19
-euros. I never had a laster printer so I told myself:
+Few months ago i found this super promotion : a Ricoh SP112 laser
+printer for just 19€. So I told myself:
 
-> "a *Laser* printer, i am going to save some savings here!".
+> "a *Laser* printer that cheap, what an opportunity!"
 
-I could not have been more wrong!
-
-When i received it i quickly realize it is a
+But when i received it i quickly realize it is a
 [GDI printer](http://www.openprinting.org/printer/Generic/Generic-GDI_Printer)
 and there is not driver for Linux :(
 
@@ -48,8 +45,63 @@ consumed.
 
 ![Picture of toner](/images/sp112_toner.png)
 
-On this picture of the toner, there is a chip, often refered as
-_toner reset chip_. This chip is composed of a simple i2c eeprom.
+So in order to re-fill the toner, we have to:
+	1. re-fill the toner with ink
+	2. reset the toner chip
+
+For the first part, there is extensive explaination on the internet.
+So i would just point to this documentation:
+
+www.uni-kit.com/pdf/tonerrefillinstructions.pdf
+
+For the second part, we will detail how to analyse your chip and reset
+it yourself.
+
+Step 1: the problem
+===================
+
+
+Your computer talks to your printer (maybe via a USB link) and your
+printer acceess the toner chip usually via an I2C bus.
+
+	+------------+           +-----------+            +-------------+
+	|    Host    |    USB    |           |    i2c     |    toner    |
+	|  computer  | <-------> |  Printer  | <--------> |    chip     |
+	|            |           |           |            |             |
+	+------------+           +-----------+            +-------------+
+
+IC2 bus are really common on embedded system, you find them
+everywhere. For example on your smartphone there are often used to
+connect the touchscreen or the motion sensor.
+
+Either we can 'snif' the communication between the printer and the
+toner with a logical analyser. this will help us to understand how to
+communicate with the tonner chip.
+
+
+	+------------+           +-----------+            +-------------+
+	|    Host    |    USB    |           |    i2c     |    toner    |
+	|  computer  | <-------> |  Printer  | <----+---> |    chip     |
+	|            |           |           |      ^     |             |
+	+------------+           +-----------+      |     +-------------+
+						    |
+
+						 logical
+						 analyser
+
+Or we can 'scan' on the i2c bus for device using a Arduino for
+example.
+
+	+-----------+          +-----------+
+	|           |   i2c    |   toner   |
+	|  Arduino  | <------> |   chip    |
+	|           |          |           |
+	+-----------+          +-----------+
+
+
+Step 1: understand the circuits
+===============================
+
 
 ![Front chip](/images/front_circuit.png)
 ![Front chip](/images/back_circuit.png)
