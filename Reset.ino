@@ -1,3 +1,13 @@
+//
+//    FILE: Reset.ino
+//  AUTHOR: Ludovic Guégan
+// VERSION: 0.1
+// PURPOSE: Reset chip for Ricoh SP112 toner
+//    DATE: 2016-03-03
+//     URL: https://github.com/lugu/reset_sp112
+//
+// Released to the public domain
+//
 
 #include <Wire.h>
 
