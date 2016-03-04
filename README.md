@@ -22,6 +22,8 @@ www.uni-kit.com/pdf/tonerrefillinstructions.pdf
 This tutorial deals with the second part: it details how to analyse your chip
 and reset it yourself.
 
+For more information about why manufaturer include those chips, read the [about page](/ABOUT.md).
+
 Step 0: the problem
 ===================
 
