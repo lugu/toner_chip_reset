@@ -10,9 +10,13 @@ Some printer toner comes with a small circuit like:
 
 ![Picture of toner](/images/sp112_toner.png)
 
-So in order to re-fill the toner, there is two things to do:
-	1. re-fill the toner with ink
-	2. reset the toner chip
+In order to re-fill those toner, there are two steps:
+
+1. fill the toner with ink
+2. replace the toner chip
+
+There is plenty of information available explaning the first step.
+
 
 For the first part, there is extensive explaination on the internet.
 So i would just point to this documentation:
@@ -48,13 +52,12 @@ communicate with the tonner chip.
 
 	+------------+           +-----------+            +-------------+
 	|    Host    |    USB    |           |    i2c     |    toner    |
-	|  computer  | <-------> |  Printer  | <----+---> |    chip     |
+	|  computer  | <-------> |  Printer  | <--------> |    chip     |
 	|            |           |           |      ^     |             |
 	+------------+           +-----------+      |     +-------------+
-						    |
-
-						 logical
-						 analyser
+	                                            |
+	                                        logical
+	                                        analyser
 
 Or we can 'scan' on the i2c bus for device using a Arduino for
 example.
