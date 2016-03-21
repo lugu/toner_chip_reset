@@ -10,8 +10,8 @@ Some printer toner comes with a small circuit like:
 
 In order to reuse this kind of toner, there are two aspects:
 
-1. refill the toner with ink
-2. replace the toner chip
+1. refill the toner with ink (if needed)
+2. reset the toner chip (or replace it)
 
 There is plenty of information about how to re-fill a toner, so i
 would just point to [this documents from uni-kit.com](www.uni-kit.com/pdf/tonerrefillinstructions.pdf).
@@ -19,9 +19,12 @@ would just point to [this documents from uni-kit.com](www.uni-kit.com/pdf/tonerr
 This document deals with the second part: how to analyse the chip and
 reset it yourself.
 
-I was able to reset the chip of an Ricoh SP112 using an Arduino. By
-following the steps bellow i hope you will be able to reset your
-toner chip, whatever the printer it is.
+I was able to reset the chip of an Ricoh SP112 using an Arduino.
+It took me a while to get everything setup: so i hope this document
+may other to do the same.
+
+We will go step-by-step to understand the problem and analyse the
+memory dump.
 
 For more information about why manufaturer include those chips, read
 the [about page](/ABOUT.md).
@@ -92,21 +95,17 @@ Step 3: find the I2C clock and address
 To communicate on an I2C bus, we need to know the clock speed and the
 address of the EEPROM.
 
-Case 1: You know the EEPROM model from the circuit analysis
------------------------------------------------------------
+If you know the EEPROM model from the circuit analysis, you can
+read the datasheet and find the clock rate and address like this:
 
 For example the [datasheet of the component FM24C02B](/datasheet/FM24C02B-04B-08B-16B.pdf)
 indicates an operating clock of 1MHz at 3.3V.
-
-Caution: 1MHz seems to be the upper bound of the my Arduino Mega can reach. Full discussion
+But 1MHz seems to be the upper bound of the my Arduino Mega can reach. Full discussion
 [here](http://electronics.stackexchange.com/questions/29457/how-to-make-arduino-do-high-speed-i2c).
 So I just use 800 kHz.
-
-The address can be calculated according to the resistances
-
-In binary, the address is computed like this
-
-	1 0 1 0 A2 A1 A0
+The datasheet indicates how to calculate the address according to the
+PIN A0, A1 and A2. In binary, the address is computed like this: ``1 0
+1 0 A2 A1 A0``.
 
 So if the configuration is:
 
@@ -114,19 +113,13 @@ So if the configuration is:
 	A1 = 1
 	A2 = 0
 
-The address will be ``1 0 1 0 0 1 1`` (83).
-
-
-Case 2: Need to scan all clocks and addresses
----------------------------------------------
+The address is ``1 0 1 0 0 1 1`` (83).
 
 In my case, it was not possible to know the exact model of EEPROM, so
-i have to scan all the possible addresses at different clock rate.
-
-In the directory scanner, you will find a sketch for search you chip
-configuration (address and bus frequency);
-
-Here is the output of the program execution:
+i have to scan all the possible addresses at different clock rate. In
+the directory scanner, you will find a sketch for search you chip
+configuration (address and bus frequency); Here is the output of the
+program execution:
 
 	Arduino I2C Scanner - 0.1.06
 
