@@ -1,7 +1,5 @@
 
-This is a tutorial to reset your toner chip with an Arduino.
-
-WIP: this is work in progress.
+Here are some advices to reset your toner chip with an Arduino.
 
 Introduction
 ============
@@ -10,133 +8,125 @@ Some printer toner comes with a small circuit like:
 
 ![Picture of toner](/images/sp112_toner.png)
 
-In order to re-fill those toner, there are two steps:
+In order to reuse this kind of toner, there are two aspects:
 
-1. fill the toner with ink
+1. refill the toner with ink
 2. replace the toner chip
 
-There is plenty of information available explaning the first step.
+There is plenty of information about how to re-fill a toner, so i
+would just point to [this documents from uni-kit.com](www.uni-kit.com/pdf/tonerrefillinstructions.pdf).
 
+This document deals with the second part: how to analyse the chip and
+reset it yourself.
 
-For the first part, there is extensive explaination on the internet.
-So i would just point to this documentation:
+I was able to reset the chip of an Ricoh SP112 using an Arduino. By
+following the steps bellow i hope you will be able to reset your
+toner chip, whatever the printer it is.
 
-www.uni-kit.com/pdf/tonerrefillinstructions.pdf
+For more information about why manufaturer include those chips, read
+the [about page](/ABOUT.md).
 
-This tutorial deals with the second part: it details how to analyse your chip
-and reset it yourself.
-
-For more information about why manufaturer include those chips, read the [about page](/ABOUT.md).
 
 Step 0: the problem
 ===================
 
-
-Your computer talks to your printer (maybe via a USB link) and your
-printer acceess the toner chip usually via an I2C bus.
+The computer talks to the printer via a USB link (or maybe through
+wifi). The printer itself communicate with the toner chiip via an I2C
+or a SPI bus. In my particular case
 
 	+------------+           +-----------+            +-------------+
-	|    Host    |    USB    |           |    i2c     |    toner    |
+	|    Host    |    USB    |           |    I2C     |    toner    |
 	|  computer  | <-------> |  Printer  | <--------> |    chip     |
 	|            |           |           |            |             |
 	+------------+           +-----------+            +-------------+
 
-IC2 bus are really common on embedded system, you find them
-everywhere. For example on your smartphone there are often used to
-connect the touchscreen or the motion sensor.
-
-Either we can 'snif' the communication between the printer and the
-toner with a logical analyser. this will help us to understand how to
-communicate with the tonner chip.
-
-
-	+------------+           +-----------+            +-------------+
-	|    Host    |    USB    |           |    i2c     |    toner    |
-	|  computer  | <-------> |  Printer  | <--------> |    chip     |
-	|            |           |           |      ^     |             |
-	+------------+           +-----------+      |     +-------------+
-	                                            |
-	                                        logical
-	                                        analyser
-
-Or we can 'scan' on the i2c bus for device using a Arduino for
-example.
+So what we will do is to connect our Arduino to the toner chip to
+reset its memory like:
 
 	+-----------+          +-----------+
-	|           |   i2c    |   toner   |
+	|           |   I2C    |   toner   |
 	|  Arduino  | <------> |   chip    |
 	|           |          |           |
 	+-----------+          +-----------+
 
 
-Step 1: reading the circuit
-===========================
+One word on I2C: the IC2 bus is very common on embedded systems. For
+example, smartphones use them to connect the touchscreen or the motion
+sensor to the main processor chip. There is plenty of documentation,
+i like [this one from saleae](http://support.saleae.com/hc/en-us/articles/200730905-Learn-I2C-Inter-Integrated-Circuit).
 
-The reset chip is usually composed of an eeprom memory.
+More about I2C: http://www.i2c-bus.org/
 
+Step 1: the circuit
+===================
+
+Now, let's analyse the circuit! On my Ricoh SP112, it is very simple,
+there is just a EEPOM memory and some resistances.
 
 ![Front chip](/images/front_circuit.png)
 ![Front chip](/images/back_circuit.png)
 
+More about EERPOM memory: https://en.wikipedia.org/wiki/EEPROM
 
-This project is about reading and writing this chip.
+The rest of the tutorial is about reading and writing to this EEPROM
+memory.
 
-Usage
-=====
+Step 2: connect your arduino
+============================
 
-```sh
-	$ make
-	$ make upload
-	$ picocom -b 115200 /dev/ttyACM0
-```
+Depending on the board the I2C pins are:
 
-Connections
-===========
+| Board         |   I2C pins           |
+| :--:          | :--:                 |
+| Uno, Ethernet |   A4 (SDA), A5 (SCL) |
+| Mega2560      |   20 (SDA), 21 (SCL) |
+| Due           |   20 (SDA), 21 (SCL) |
+| Leonardo      |   2 (SDA), 3 (SCL)   |
 
-Depending on the board the i2c pins are:
-
-| Board         |   I2C / TWI pins                 |
-| :--:          | :--:                             |
-| Uno, Ethernet |   A4 (SDA), A5 (SCL)             |
-| Mega2560      |   20 (SDA), 21 (SCL)             |
-| Leonardo      |   2 (SDA), 3 (SCL)               |
-| Due           |   20 (SDA), 21 (SCL), SDA1, SCL1 |
+Then connect GND and VCC to 3.3V.
 
 
-Address
-=======
+Step 3: find the I2C clock and address
+======================================
 
-1010 + A2 + A1 + A0
+To communicate on an I2C bus, we need to know the clock speed and the
+address of the EEPROM.
 
-A0 = 1
-A1 = 1
-A2 = 0
+Case 1: You know the EEPROM model from the circuit analysis
+-----------------------------------------------------------
 
-1010011 = 83
+For example the [datasheet of the component FM24C02B](/datasheet/FM24C02B-04B-08B-16B.pdf)
+indicates an operating clock of 1MHz at 3.3V.
 
-A0, A1, A2 can be not used if the eeprom has more than 2K memory.
+Caution: 1MHz seems to be the upper bound of the my Arduino Mega can reach. Full discussion
+[here](http://electronics.stackexchange.com/questions/29457/how-to-make-arduino-do-high-speed-i2c).
+So I just use 800 kHz.
+
+The address can be calculated according to the resistances
+
+In binary, the address is computed like this
+
+	1 0 1 0 A2 A1 A0
+
+So if the configuration is:
+
+	A0 = 1
+	A1 = 1
+	A2 = 0
+
+The address will be ``1 0 1 0 0 1 1`` (83).
 
 
-Bus frequency
-=============
+Case 2: Need to scan all clocks and addresses
+---------------------------------------------
 
-The [datasheet](/datasheet/FM24C02B-04B-08B-16B.pdf) of the component
-FM24C02B indicate an operating clock of 1MHz at 3.3V.
-
-At 1MHz, bits are not sent correctly to i2c bus (i checked using a
-logical analyser operating at 8MHz). This is because the Arduino can
-not operate at this clock: 1MHz seems to be the upper bound of the
-Arduino Mega can reach.
-
-http://electronics.stackexchange.com/questions/29457/how-to-make-arduino-do-high-speed-i2c
-
-Finally, setting the clocks to 800kHz works just fine.
-
-Scanning for i2c device using an Arduino
-========================================
+In my case, it was not possible to know the exact model of EEPROM, so
+i have to scan all the possible addresses at different clock rate.
 
 In the directory scanner, you will find a sketch for search you chip
 configuration (address and bus frequency);
+
+Here is the output of the program execution:
 
 	Arduino I2C Scanner - 0.1.06
 
@@ -289,10 +279,12 @@ configuration (address and bus frequency);
 	3320	126	0x7E		.	.	.	.	.	.	.  
 	3322	127	0x7F		.	.	.	.	.	.	.  
 
-	64 devices found in 347 milliseconds.
+	1 device find in 347 milliseconds.
 
-Read operation
-==============
+
+
+Step 4: reading the EEPROM
+==========================
 
 Sequence for random read:
 
@@ -307,54 +299,6 @@ Sequence for random read:
 STOP condition mandatory between writes.
 Write cycle: 5 ms.
 
-Links
-=====
-
-Blog:
-	http://www.hobbytronics.co.uk/arduino-external-eeprom
-	http://www.hobbytronics.co.uk/eeprom-page-write
-	http://lusorobotica.com/index.php/topic,461.msg2738.html
-
-Arduino:
-	https://www.arduino.cc/en/Reference/Wire
-
-Tonner investigations:
-	http://www.mikrocontroller.net/topic/369267
-	https://esdblog.org/ricoh-sp-c250dn-laser-printer-toner-hack/
-	http://rumburg.org/printerhack/
-
-Toner chip reset for sale:
-	http://www.aliexpress.com/item/chip-FOR-RICOH-imagio-SP-112-SF-chip-MAILING-MACHINE-printer-POSTAGE-printer-for-Ricoh-100/32261857176.html
-	http://www.ebay.com/itm/Toner-cartridge-refill-kit-for-Ricoh-Aficio-SP112-SP112SU-SP112SF-407166-non-OEM-/161312940764
-
-Ricoh:
-	https://www.techdata.com/business/Ricoh/files/july2014/CurrentMSRP.pdf
-	http://support.ricoh.com/bb_v1oi/pub_e/oi/0001044/0001044844/VM1018655/M1018655.pdf
-
-Datasheets:
-	http://www.gaw.ru/pdf/Rohm/memory/br24l01.pdf
-	http://www.rinkem.com/web/userfiles/productfile/upload/201009/FM24C02B-04B-08B-16B.pdf
-
-Logical Analyser & I2C:
-	http://support.saleae.com/hc/en-us/articles/202740085-Using-Protocol-Analyzers
-	http://support.saleae.com/hc/en-us/articles/200730905-Learn-I2C-Inter-Integrated-Circuit
-
-
-Ricoh SP112 LED
-===============
-
-	Left LED: Power Indicator
-	This indicator lights up blue when the machine is turned on.
-	It flashes when a print job is received and while printing is in progress.
-
-	Right LED: Alert Indicator
-	This indicator lights up red when the machine runs out of paper or consumables,
-	when the paper settings do match the settings specified by the driver,
-	or when other abnormalities occur.
-
-
-Dump result
-===========
 
 Print the data with:
 
@@ -410,36 +354,8 @@ Transform the binary data into a C array:
 	};
 	unsigned int dump_bin_len = 256;
 
-
-USB packet capture
-==================
-
-Here is an example of USB command sent by the proprietary windows
-driver to the printer (captured with tcpdump when running windows
-inside qemu):
-
-	%-12345X@PJL
-	@PJL SET TIMESTAMP=2015/09/14 21:15:14
-	@PJL SET FILENAME=test - Notepad
-	@PJL SET COMPRESS=JBIG
-	@PJL SET USERNAME=IEUser
-	@PJL SET COVER=OFF
-	@PJL SET HOLD=OFF
-	@PJL SET PAGESTATUS=START
-	@PJL SET COPIES=1
-	@PJL SET MEDIASOURCE=TRAY1
-	@PJL SET MEDIATYPE=PLAINRECYCLE
-	@PJL SET PAPER=LETTER
-	@PJL SET PAPERWIDTH=5100
-	@PJL SET PAPERLENGTH=6600
-	@PJL SET RESOLUTION=600
-	@PJL SET IMAGELEN=691
-	[... image data ... ]
-	@PJL SET DOTCOUNT=10745
-	@PJL SET PAGESTATUS=END
-	@PJL EOJ
-	%-12345X
-
+Step 5: understand the data
+===========================
 
 Data hypothesis
 ===============
@@ -464,7 +380,7 @@ The eeprom is a simple data storage. The printer might wants to:
 Here is what could be the printer logical sequence:
 
 * Power on printer
-* Check if a toner is present on the i2c bus:
+* Check if a toner is present on the I2C bus:
 	* Check a device respond
 	* Verifies the magic number
 	* Check if the toner is compatible this printer model (sp112)
@@ -606,8 +522,35 @@ Same pattern:
 
 => We can try to reset the counter and hope for not double checks
 
-Printer i2c commands
-====================
+
+Step 6: try some changes
+========================
+
+Step 7: share youf findings
+===========================
+
+Bonus 1: snif the I2C commands
+=============================
+
+If you are not sure what kind of bus it is, or if you want to 'snif'
+the communication between the printer and the toner with a logical
+analyser. This can help us to understand how to communicate with the
+toner chip.
+
+
+	+------------+           +-----------+            +-------------+
+	|    Host    |    USB    |           |    I2C     |    toner    |
+	|  computer  | <-------> |  Printer  | <--------> |    chip     |
+	|            |           |           |      ^     |             |
+	+------------+           +-----------+      |     +-------------+
+	                                            |
+	                                        logical
+	                                        analyser
+
+You can purchase a digital analyser to listen the I2C bus while the
+printer is communicating with the toner chip. There are plenty of
+digital analysers supported by Sigrock:
+https://sigrok.org/wiki/Supported_hardware
 
 Here is the sequence of read/write operations from the printer
 captured by a logical analyser:
@@ -707,19 +650,95 @@ captured by a logical analyser:
 	Page write (addr=70, 4 bytes): 00 0E 77 8D
 ```
 
-One sequential read of the content of the eeprom, followed by a
-sequence of write operations: 4 byte at 0x70, 1 byte at 0x76.
+How to read this: one sequential read of the content of the eeprom,
+followed by a sequence of write operations: 4 byte at 0x70, 1 byte at
+0x76. This the printer read all the eeprom, it is difficult to figure
+out which address hold which information.
 
-This the printer read all the eeprom, it is difficult to figure out
-which address hold which information.
+
+Bonus 2: snif the USB packets
+============================
+
+Here is an example of USB command sent by the proprietary windows
+driver to the printer (captured with tcpdump when running windows
+inside qemu):
+
+	%-12345X@PJL
+	@PJL SET TIMESTAMP=2015/09/14 21:15:14
+	@PJL SET FILENAME=test - Notepad
+	@PJL SET COMPRESS=JBIG
+	@PJL SET USERNAME=IEUser
+	@PJL SET COVER=OFF
+	@PJL SET HOLD=OFF
+	@PJL SET PAGESTATUS=START
+	@PJL SET COPIES=1
+	@PJL SET MEDIASOURCE=TRAY1
+	@PJL SET MEDIATYPE=PLAINRECYCLE
+	@PJL SET PAPER=LETTER
+	@PJL SET PAPERWIDTH=5100
+	@PJL SET PAPERLENGTH=6600
+	@PJL SET RESOLUTION=600
+	@PJL SET IMAGELEN=691
+	[... image data ... ]
+	@PJL SET DOTCOUNT=10745
+	@PJL SET PAGESTATUS=END
+	@PJL EOJ
+	%-12345X
 
 
-Read 0x0 to 0xFF
-Write 0x76: 64
-Write 0x70: 00 00 01 F4
-Write 0x70: 00 00 03 E8
-Write 0x77: 33
-Write 0x70: 00 00 04 C3
+Usage
+=====
+
+```sh
+	$ make
+	$ make upload
+	$ picocom -b 115200 /dev/ttyACM0
+```
+Links
+=====
+
+Blog:
+	http://www.hobbytronics.co.uk/arduino-external-eeprom
+	http://www.hobbytronics.co.uk/eeprom-page-write
+	http://lusorobotica.com/index.php/topic,461.msg2738.html
+
+Arduino:
+	https://www.arduino.cc/en/Reference/Wire
+
+Tonner investigations:
+	http://www.mikrocontroller.net/topic/369267
+	https://esdblog.org/ricoh-sp-c250dn-laser-printer-toner-hack/
+	http://rumburg.org/printerhack/
+
+Toner chip reset for sale:
+	http://www.aliexpress.com/item/chip-FOR-RICOH-imagio-SP-112-SF-chip-MAILING-MACHINE-printer-POSTAGE-printer-for-Ricoh-100/32261857176.html
+	http://www.ebay.com/itm/Toner-cartridge-refill-kit-for-Ricoh-Aficio-SP112-SP112SU-SP112SF-407166-non-OEM-/161312940764
+
+Ricoh:
+	https://www.techdata.com/business/Ricoh/files/july2014/CurrentMSRP.pdf
+	http://support.ricoh.com/bb_v1oi/pub_e/oi/0001044/0001044844/VM1018655/M1018655.pdf
+
+Datasheets:
+	http://www.gaw.ru/pdf/Rohm/memory/br24l01.pdf
+	http://www.rinkem.com/web/userfiles/productfile/upload/201009/FM24C02B-04B-08B-16B.pdf
+
+Logical Analyser & I2C:
+	http://support.saleae.com/hc/en-us/articles/202740085-Using-Protocol-Analyzers
+	http://support.saleae.com/hc/en-us/articles/200730905-Learn-I2C-Inter-Integrated-Circuit
+
+
+Ricoh SP112 LED
+===============
+
+	Left LED: Power Indicator
+	This indicator lights up blue when the machine is turned on.
+	It flashes when a print job is received and while printing is in progress.
+
+	Right LED: Alert Indicator
+	This indicator lights up red when the machine runs out of paper or consumables,
+	when the paper settings do match the settings specified by the driver,
+	or when other abnormalities occur.
+
 
 
 Todo
@@ -729,12 +748,12 @@ Todo
 - [x] Read internal EEPROM
 - [x] Draw the cricuit
 - [x] Understand the cricuit
-- [x] Try i2c clock at 400kHz and 1MHz
+- [x] Try I2C clock at 400kHz and 1MHz
 - [x] Scan for device => use MultiSpeedScanner
 - [x] Analyse I2C trame with a logical analyser
 - [x] Visualize I2C packets with pulseview
 - [x] Read one EEPROM datasheet
-- [x] Debug i2c addresses sent (1010001 and not 0101000) ~ frequence to high
+- [x] Debug I2C addresses sent (1010001 and not 0101000) ~ frequence to high
 - [x] Verifies the timming between read and write operations (5ms)
 - [x] Find the exact EEPROM chip model
 - [x] Find the EEPROM address (0x53)
