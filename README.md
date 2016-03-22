@@ -8,27 +8,31 @@ Some printer toner comes with a small circuit like:
 
 ![Picture of toner](/images/sp112_toner.png)
 
-In order to reuse this kind of toner, there are two aspects:
+In order to reuse this kind of toner, there are two steps:
 
 1. refill the toner with ink (if needed)
 2. reset the toner chip (or replace it)
 
-There is plenty of information about how to re-fill a toner, so i
-would just point to [this documents from uni-kit.com](www.uni-kit.com/pdf/tonerrefillinstructions.pdf).
+While there is plenty of information explaining how to refill the
+toner, little information is available to erase the toner chip.
+
+Refilling the toner with ink is describe in great lenght in [this documents from uni-kit.com](www.uni-kit.com/pdf/tonerrefillinstructions.pdf).
 
 This document deals with the second part: how to analyse the chip and
-reset it yourself.
+reset it.
 
-I was able to reset the chip of an Ricoh SP112 using an Arduino.
-It took me a while to get everything setup: so i hope this document
-may other to do the same.
+It took me a while to get everything setup and to have my toner chip
+reset so i would like to share this process in order to help other to
+do the same on their printer.
 
-We will go step-by-step to understand the problem and analyse the
-memory dump.
+We will go step-by-step to understand the problem, analyse the
+circuit, read the chip memory and write it back so the toner can
+function again.
 
 For more information about why manufaturer include those chips, read
 the [about page](/ABOUT.md).
 
+![Picture of the font circuit](/images/front_circuit.jpg)
 
 Step 0: the problem
 ===================
@@ -143,134 +147,134 @@ program execution:
 
 	TIME	DEC	HEX		50	100	200	250	400	500	800	[KHz]
 	---------------------------------------------------------------------------------------------
-	2987	0	0x00		.	.	.	.	.	.	.  
-	2990	1	0x01		.	.	.	.	.	.	.  
-	2992	2	0x02		.	.	.	.	.	.	.  
-	2994	3	0x03		.	.	.	.	.	.	.  
-	2997	4	0x04		.	.	.	.	.	.	.  
-	2999	5	0x05		.	.	.	.	.	.	.  
-	3002	6	0x06		.	.	.	.	.	.	.  
-	3004	7	0x07		.	.	.	.	.	.	.  
-	3007	8	0x08		.	.	.	.	.	.	.  
-	3009	9	0x09		.	.	.	.	.	.	.  
-	3012	10	0x0A		.	.	.	.	.	.	.  
-	3014	11	0x0B		.	.	.	.	.	.	.  
-	3017	12	0x0C		.	.	.	.	.	.	.  
-	3020	13	0x0D		.	.	.	.	.	.	.  
-	3022	14	0x0E		.	.	.	.	.	.	.  
-	3025	15	0x0F		.	.	.	.	.	.	.  
-	3027	16	0x10		.	.	.	.	.	.	.  
-	3031	17	0x11		.	.	.	.	.	.	.  
-	3034	18	0x12		.	.	.	.	.	.	.  
-	3036	19	0x13		.	.	.	.	.	.	.  
-	3039	20	0x14		.	.	.	.	.	.	.  
-	3041	21	0x15		.	.	.	.	.	.	.  
-	3044	22	0x16		.	.	.	.	.	.	.  
-	3046	23	0x17		.	.	.	.	.	.	.  
-	3049	24	0x18		.	.	.	.	.	.	.  
-	3052	25	0x19		.	.	.	.	.	.	.  
-	3054	26	0x1A		.	.	.	.	.	.	.  
-	3057	27	0x1B		.	.	.	.	.	.	.  
-	3059	28	0x1C		.	.	.	.	.	.	.  
-	3062	29	0x1D		.	.	.	.	.	.	.  
-	3064	30	0x1E		.	.	.	.	.	.	.  
-	3067	31	0x1F		.	.	.	.	.	.	.  
-	3070	32	0x20		.	.	.	.	.	.	.  
-	3073	33	0x21		.	.	.	.	.	.	.  
-	3076	34	0x22		.	.	.	.	.	.	.  
-	3078	35	0x23		.	.	.	.	.	.	.  
-	3081	36	0x24		.	.	.	.	.	.	.  
-	3083	37	0x25		.	.	.	.	.	.	.  
-	3086	38	0x26		.	.	.	.	.	.	.  
-	3089	39	0x27		.	.	.	.	.	.	.  
-	3091	40	0x28		.	.	.	.	.	.	.  
-	3094	41	0x29		.	.	.	.	.	.	.  
-	3096	42	0x2A		.	.	.	.	.	.	.  
-	3099	43	0x2B		.	.	.	.	.	.	.  
-	3101	44	0x2C		.	.	.	.	.	.	.  
-	3104	45	0x2D		.	.	.	.	.	.	.  
-	3107	46	0x2E		.	.	.	.	.	.	.  
-	3109	47	0x2F		.	.	.	.	.	.	.  
-	3112	48	0x30		.	.	.	.	.	.	.  
-	3115	49	0x31		.	.	.	.	.	.	.  
-	3118	50	0x32		.	.	.	.	.	.	.  
-	3120	51	0x33		.	.	.	.	.	.	.  
-	3123	52	0x34		.	.	.	.	.	.	.  
-	3126	53	0x35		.	.	.	.	.	.	.  
-	3128	54	0x36		.	.	.	.	.	.	.  
-	3131	55	0x37		.	.	.	.	.	.	.  
-	3133	56	0x38		.	.	.	.	.	.	.  
-	3136	57	0x39		.	.	.	.	.	.	.  
-	3138	58	0x3A		.	.	.	.	.	.	.  
-	3141	59	0x3B		.	.	.	.	.	.	.  
-	3144	60	0x3C		.	.	.	.	.	.	.  
-	3146	61	0x3D		.	.	.	.	.	.	.  
-	3149	62	0x3E		.	.	.	.	.	.	.  
-	3151	63	0x3F		.	.	.	.	.	.	.  
-	3154	64	0x40		.	.	.	.	.	.	.  
-	3156	65	0x41		.	.	.	.	.	.	.  
-	3160	66	0x42		.	.	.	.	.	.	.  
-	3163	67	0x43		.	.	.	.	.	.	.  
-	3165	68	0x44		.	.	.	.	.	.	.  
-	3168	69	0x45		.	.	.	.	.	.	.  
-	3170	70	0x46		.	.	.	.	.	.	.  
-	3173	71	0x47		.	.	.	.	.	.	.  
-	3175	72	0x48		.	.	.	.	.	.	.  
-	3178	73	0x49		.	.	.	.	.	.	.  
-	3181	74	0x4A		.	.	.	.	.	.	.  
-	3183	75	0x4B		.	.	.	.	.	.	.  
-	3186	76	0x4C		.	.	.	.	.	.	.  
-	3188	77	0x4D		.	.	.	.	.	.	.  
-	3191	78	0x4E		.	.	.	.	.	.	.  
-	3193	79	0x4F		.	.	.	.	.	.	.  
-	3196	80	0x50		.	.	.	.	.	.	.  
-	3200	81	0x51		.	.	.	.	.	.	.  
-	3202	82	0x52		.	.	.	.	.	.	.  
-	3205	83	0x53		V	V	V	V	V	V	V  
-	3207	84	0x54		.	.	.	.	.	.	.  
-	3210	85	0x55		.	.	.	.	.	.	.  
-	3212	86	0x56		.	.	.	.	.	.	.  
-	3215	87	0x57		.	.	.	.	.	.	.  
-	3218	88	0x58		.	.	.	.	.	.	.  
-	3220	89	0x59		.	.	.	.	.	.	.  
-	3223	90	0x5A		.	.	.	.	.	.	.  
-	3225	91	0x5B		.	.	.	.	.	.	.  
-	3228	92	0x5C		.	.	.	.	.	.	.  
-	3231	93	0x5D		.	.	.	.	.	.	.  
-	3233	94	0x5E		.	.	.	.	.	.	.  
-	3236	95	0x5F		.	.	.	.	.	.	.  
-	3238	96	0x60		.	.	.	.	.	.	.  
-	3241	97	0x61		.	.	.	.	.	.	.  
-	3244	98	0x62		.	.	.	.	.	.	.  
-	3247	99	0x63		.	.	.	.	.	.	.  
-	3250	100	0x64		.	.	.	.	.	.	.  
-	3252	101	0x65		.	.	.	.	.	.	.  
-	3255	102	0x66		.	.	.	.	.	.	.  
-	3257	103	0x67		.	.	.	.	.	.	.  
-	3260	104	0x68		.	.	.	.	.	.	.  
-	3263	105	0x69		.	.	.	.	.	.	.  
-	3265	106	0x6A		.	.	.	.	.	.	.  
-	3268	107	0x6B		.	.	.	.	.	.	.  
-	3271	108	0x6C		.	.	.	.	.	.	.  
-	3273	109	0x6D		.	.	.	.	.	.	.  
-	3276	110	0x6E		.	.	.	.	.	.	.  
-	3279	111	0x6F		.	.	.	.	.	.	.  
-	3281	112	0x70		.	.	.	.	.	.	.  
-	3284	113	0x71		.	.	.	.	.	.	.  
-	3288	114	0x72		.	.	.	.	.	.	.  
-	3290	115	0x73		.	.	.	.	.	.	.  
-	3293	116	0x74		.	.	.	.	.	.	.  
-	3296	117	0x75		.	.	.	.	.	.	.  
-	3298	118	0x76		.	.	.	.	.	.	.  
-	3301	119	0x77		.	.	.	.	.	.	.  
-	3304	120	0x78		.	.	.	.	.	.	.  
-	3306	121	0x79		.	.	.	.	.	.	.  
-	3309	122	0x7A		.	.	.	.	.	.	.  
-	3312	123	0x7B		.	.	.	.	.	.	.  
-	3314	124	0x7C		.	.	.	.	.	.	.  
-	3317	125	0x7D		.	.	.	.	.	.	.  
-	3320	126	0x7E		.	.	.	.	.	.	.  
-	3322	127	0x7F		.	.	.	.	.	.	.  
+	2987	0	0x00		.	.	.	.	.	.	.
+	2990	1	0x01		.	.	.	.	.	.	. 
+	2992	2	0x02		.	.	.	.	.	.	. 
+	2994	3	0x03		.	.	.	.	.	.	. 
+	2997	4	0x04		.	.	.	.	.	.	. 
+	2999	5	0x05		.	.	.	.	.	.	. 
+	3002	6	0x06		.	.	.	.	.	.	. 
+	3004	7	0x07		.	.	.	.	.	.	. 
+	3007	8	0x08		.	.	.	.	.	.	. 
+	3009	9	0x09		.	.	.	.	.	.	. 
+	3012	10	0x0A		.	.	.	.	.	.	. 
+	3014	11	0x0B		.	.	.	.	.	.	. 
+	3017	12	0x0C		.	.	.	.	.	.	. 
+	3020	13	0x0D		.	.	.	.	.	.	. 
+	3022	14	0x0E		.	.	.	.	.	.	. 
+	3025	15	0x0F		.	.	.	.	.	.	. 
+	3027	16	0x10		.	.	.	.	.	.	. 
+	3031	17	0x11		.	.	.	.	.	.	. 
+	3034	18	0x12		.	.	.	.	.	.	. 
+	3036	19	0x13		.	.	.	.	.	.	. 
+	3039	20	0x14		.	.	.	.	.	.	. 
+	3041	21	0x15		.	.	.	.	.	.	. 
+	3044	22	0x16		.	.	.	.	.	.	. 
+	3046	23	0x17		.	.	.	.	.	.	. 
+	3049	24	0x18		.	.	.	.	.	.	. 
+	3052	25	0x19		.	.	.	.	.	.	. 
+	3054	26	0x1A		.	.	.	.	.	.	. 
+	3057	27	0x1B		.	.	.	.	.	.	. 
+	3059	28	0x1C		.	.	.	.	.	.	. 
+	3062	29	0x1D		.	.	.	.	.	.	. 
+	3064	30	0x1E		.	.	.	.	.	.	. 
+	3067	31	0x1F		.	.	.	.	.	.	. 
+	3070	32	0x20		.	.	.	.	.	.	. 
+	3073	33	0x21		.	.	.	.	.	.	. 
+	3076	34	0x22		.	.	.	.	.	.	. 
+	3078	35	0x23		.	.	.	.	.	.	. 
+	3081	36	0x24		.	.	.	.	.	.	. 
+	3083	37	0x25		.	.	.	.	.	.	. 
+	3086	38	0x26		.	.	.	.	.	.	. 
+	3089	39	0x27		.	.	.	.	.	.	. 
+	3091	40	0x28		.	.	.	.	.	.	. 
+	3094	41	0x29		.	.	.	.	.	.	. 
+	3096	42	0x2A		.	.	.	.	.	.	. 
+	3099	43	0x2B		.	.	.	.	.	.	. 
+	3101	44	0x2C		.	.	.	.	.	.	. 
+	3104	45	0x2D		.	.	.	.	.	.	. 
+	3107	46	0x2E		.	.	.	.	.	.	. 
+	3109	47	0x2F		.	.	.	.	.	.	. 
+	3112	48	0x30		.	.	.	.	.	.	. 
+	3115	49	0x31		.	.	.	.	.	.	. 
+	3118	50	0x32		.	.	.	.	.	.	. 
+	3120	51	0x33		.	.	.	.	.	.	. 
+	3123	52	0x34		.	.	.	.	.	.	. 
+	3126	53	0x35		.	.	.	.	.	.	. 
+	3128	54	0x36		.	.	.	.	.	.	. 
+	3131	55	0x37		.	.	.	.	.	.	. 
+	3133	56	0x38		.	.	.	.	.	.	. 
+	3136	57	0x39		.	.	.	.	.	.	. 
+	3138	58	0x3A		.	.	.	.	.	.	. 
+	3141	59	0x3B		.	.	.	.	.	.	. 
+	3144	60	0x3C		.	.	.	.	.	.	. 
+	3146	61	0x3D		.	.	.	.	.	.	. 
+	3149	62	0x3E		.	.	.	.	.	.	. 
+	3151	63	0x3F		.	.	.	.	.	.	. 
+	3154	64	0x40		.	.	.	.	.	.	. 
+	3156	65	0x41		.	.	.	.	.	.	. 
+	3160	66	0x42		.	.	.	.	.	.	. 
+	3163	67	0x43		.	.	.	.	.	.	. 
+	3165	68	0x44		.	.	.	.	.	.	. 
+	3168	69	0x45		.	.	.	.	.	.	. 
+	3170	70	0x46		.	.	.	.	.	.	. 
+	3173	71	0x47		.	.	.	.	.	.	. 
+	3175	72	0x48		.	.	.	.	.	.	. 
+	3178	73	0x49		.	.	.	.	.	.	. 
+	3181	74	0x4A		.	.	.	.	.	.	. 
+	3183	75	0x4B		.	.	.	.	.	.	. 
+	3186	76	0x4C		.	.	.	.	.	.	. 
+	3188	77	0x4D		.	.	.	.	.	.	. 
+	3191	78	0x4E		.	.	.	.	.	.	. 
+	3193	79	0x4F		.	.	.	.	.	.	. 
+	3196	80	0x50		.	.	.	.	.	.	. 
+	3200	81	0x51		.	.	.	.	.	.	. 
+	3202	82	0x52		.	.	.	.	.	.	. 
+	3205	83	0x53		V	V	V	V	V	V	V 
+	3207	84	0x54		.	.	.	.	.	.	. 
+	3210	85	0x55		.	.	.	.	.	.	. 
+	3212	86	0x56		.	.	.	.	.	.	. 
+	3215	87	0x57		.	.	.	.	.	.	. 
+	3218	88	0x58		.	.	.	.	.	.	. 
+	3220	89	0x59		.	.	.	.	.	.	. 
+	3223	90	0x5A		.	.	.	.	.	.	. 
+	3225	91	0x5B		.	.	.	.	.	.	. 
+	3228	92	0x5C		.	.	.	.	.	.	. 
+	3231	93	0x5D		.	.	.	.	.	.	. 
+	3233	94	0x5E		.	.	.	.	.	.	. 
+	3236	95	0x5F		.	.	.	.	.	.	. 
+	3238	96	0x60		.	.	.	.	.	.	. 
+	3241	97	0x61		.	.	.	.	.	.	. 
+	3244	98	0x62		.	.	.	.	.	.	. 
+	3247	99	0x63		.	.	.	.	.	.	. 
+	3250	100	0x64		.	.	.	.	.	.	. 
+	3252	101	0x65		.	.	.	.	.	.	. 
+	3255	102	0x66		.	.	.	.	.	.	. 
+	3257	103	0x67		.	.	.	.	.	.	. 
+	3260	104	0x68		.	.	.	.	.	.	. 
+	3263	105	0x69		.	.	.	.	.	.	. 
+	3265	106	0x6A		.	.	.	.	.	.	. 
+	3268	107	0x6B		.	.	.	.	.	.	. 
+	3271	108	0x6C		.	.	.	.	.	.	. 
+	3273	109	0x6D		.	.	.	.	.	.	. 
+	3276	110	0x6E		.	.	.	.	.	.	. 
+	3279	111	0x6F		.	.	.	.	.	.	. 
+	3281	112	0x70		.	.	.	.	.	.	. 
+	3284	113	0x71		.	.	.	.	.	.	. 
+	3288	114	0x72		.	.	.	.	.	.	. 
+	3290	115	0x73		.	.	.	.	.	.	. 
+	3293	116	0x74		.	.	.	.	.	.	. 
+	3296	117	0x75		.	.	.	.	.	.	. 
+	3298	118	0x76		.	.	.	.	.	.	. 
+	3301	119	0x77		.	.	.	.	.	.	. 
+	3304	120	0x78		.	.	.	.	.	.	. 
+	3306	121	0x79		.	.	.	.	.	.	. 
+	3309	122	0x7A		.	.	.	.	.	.	. 
+	3312	123	0x7B		.	.	.	.	.	.	. 
+	3314	124	0x7C		.	.	.	.	.	.	. 
+	3317	125	0x7D		.	.	.	.	.	.	. 
+	3320	126	0x7E		.	.	.	.	.	.	. 
+	3322	127	0x7F		.	.	.	.	.	.	. 
 
 	1 device find in 347 milliseconds.
 
@@ -525,10 +529,12 @@ Step 7: share youf findings
 Bonus 1: snif the I2C commands
 =============================
 
-If you are not sure what kind of bus it is, or if you want to 'snif'
-the communication between the printer and the toner with a logical
-analyser. This can help us to understand how to communicate with the
-toner chip.
+One way to gain some insight about the memory layout, is to spy the
+communication between the printer and the toner during the printing
+processus.
+
+In order to do so, we can use a logical analyser. This is a simple
+equipement that will record the logical state of the wires.
 
 
 	+------------+           +-----------+            +-------------+
@@ -540,13 +546,34 @@ toner chip.
 	                                        logical
 	                                        analyser
 
-You can purchase a digital analyser to listen the I2C bus while the
-printer is communicating with the toner chip. There are plenty of
-digital analysers supported by Sigrock:
-https://sigrok.org/wiki/Supported_hardware
+This can be very useful to learn:
 
-Here is the sequence of read/write operations from the printer
-captured by a logical analyser:
+* the general properties of the communication (type of
+  bus, clock speed, device address).
+* what memory address the printer read and write
+
+The main open source project to use logical analysers is
+[Sigrok](http://sigrok.org). For the list of supported analysers
+please refer to [supported hardware page](https://sigrok.org/wiki/Supported_hardware).
+
+The following pictures explain the settings:
+
+1. attach the wires to the circuit and put back the circuit on the
+   toner in the printer.
+2. connect the logical analyzer.
+
+![Picture of the back circuit](/images/back_circuit.jpg)
+![Picture of logical analyzer in the printer](/images/logical_analyser.jpg)
+
+To capture the data transfert, you can use a graphical tool
+like [Pulseview](https://sigrok.org/wiki/PulseView).
+
+![Picture of Pulseview interface](/pulseview/capture_eeprom.png)
+
+You can also use the command line tool called
+[sigrok-cli](https://sigrok.org/wiki/Sigrok-cli) as demonstrated
+bellow:
+
 
 ```sh
 	$ sigrok-cli -i start_printer_failed.sr -P i2c:scl=2:sda=3,eeprom24xx
