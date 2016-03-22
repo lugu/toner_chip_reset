@@ -371,83 +371,59 @@ those values are for.
 Step 5: understand the data
 ===========================
 
-This is now the detective part : we need to understand the memory
-layout.
+In order to understand the memory layout, we have to think like a
+detective.
 
+The EEPROM is a simple data storage. The printer might wants to:
 
-From what the dirver send, the print has access to:
-
-* the number of page
-* the number of 'dot' per page
-
-The number of 'dot' per page can be sent to zero. On my computer i updated
-the driver to send the proper value. This is probably why my toner run out
-ink so quickly: during my experiments i probably sent the wrong values.
-
-The eeprom is a simple data storage. The printer might wants to:
-
+* read the toner model (to check compatibility)
 * store the number of printed pages and/or the number of printed dot
 * mark is as used by a particular printer to prevent second hand market
 * mark the date of the first and last usage to make it out of date.
-* the toner may have the information of the maximum 'dot' capacity (or
-  a count down value).
+* store toner capacity of page and 'dot' (can be a cound down value).
 
-Here is what could be the printer logical sequence:
+This is purely speculative at this stage.
 
-* Power on printer
-* Check if a toner is present on the I2C bus:
-	* Check a device respond
-	* Verifies the magic number
-	* Check if the toner is compatible this printer model (sp112)
-	* Check if associated with this particular printer
-		* if not associated, write the printer PN into the toner
-* Check if the toner is usable:
-	* Check if the toner is broken
-		* Read a broken information (ex: like an error code on eeprom)?
-	* Check if the toner is too old:
-		* Read the first date of usage
-		* Read the last date of usage
-	* Check if the toner capacity is exhausted:
-		* Read the page count
-		* Read the max page information
-		* Read the dot count
-		* Read the max dot information
-* Set to status OK
-* When printing a new page:
-	* Receive the date
-	* Receive all the pages in a black/white dot format
-	* For each page:
-		* Verify if the page counter is exhausted
-			* if so mark the toner a broken (reach max pages)
-		* Verify the dot counter is exhausted
-			* if so mark the toner a broken (reach max dots)
-		* Compare the date with the first usage
-			* if no first usage, mark this date as the first usage
-			* if first usage more than duration mark the toner as broken (too old)
-		* Compare the date with the last usage
-			* if last usage less than continous mark the toner as broken (too dry)
-		* Increment the dot counter
-		* Increment the last usage counter
-		* Update the last usage time
-		* Print the page
+In the search for evidences, we can capture the USB packet sent by the
+computer to the printer. Thanks to tcpdump, this is very easy (see
+"Bonus 2: snif the USB packets").
 
-From this we can imagine to see:
+My particular printer uses 
+[Printer Job Language: PJL](https://en.wikipedia.org/wiki/Printer_Job_Language).
+Here is a data transfered over USB when I print a page:
 
-* the dot capacity
-* the dot usage
-* the page capacity
-* the page usage
-* the time of first use
-* the time of last use
-* one or more status register (broken information)
+	%-12345X@PJL
+	@PJL SET TIMESTAMP=2015/09/14 21:15:14
+	@PJL SET FILENAME=test - Notepad
+	@PJL SET COMPRESS=JBIG
+	@PJL SET USERNAME=IEUser
+	@PJL SET COVER=OFF
+	@PJL SET HOLD=OFF
+	@PJL SET PAGESTATUS=START
+	@PJL SET COPIES=1
+	@PJL SET MEDIASOURCE=TRAY1
+	@PJL SET MEDIATYPE=PLAINRECYCLE
+	@PJL SET PAPER=LETTER
+	@PJL SET PAPERWIDTH=5100
+	@PJL SET PAPERLENGTH=6600
+	@PJL SET RESOLUTION=600
+	@PJL SET IMAGELEN=691
+	[... image data ... ]
+	@PJL SET DOTCOUNT=10745
+	@PJL SET PAGESTATUS=END
+	@PJL EOJ
+	%-12345X
 
-About the dates:
+The important piece of information are:
 
-* year/mount/day is enough
-* if the toner needs to warm-up, hours/minutes/seconds is also required.
+* the DOTCOUNT value
+* the TIMESTAMP value
 
-Unix epoch format seems well suited for this need (no calendar juggling).
-Here is an example of a date in hexadecimal values:
+One note about dates: To implement a simple 'out of date' mechanism,
+year/mount/day is enough. But if the toner needs to warm-up or cool
+down hours/minutes/seconds might also required. 2016 converted to
+hexadecimal is 7E0. Be aware of Unix epoch format. It is well suited
+for this need. Here is an example of a date in hexadecimal values:
 
 	$ date --date='@1456056478'
 	Sun Feb 21 13:07:58 CET 2016
@@ -457,89 +433,42 @@ Here is an example of a date in hexadecimal values:
 32 bits is enough to live until 2038, which certainly exceeded the expected
 life of such product.
 
-Part number: 407431 (0x63787)
-http://www.cnet.com/products/ricoh-sp-112-printer-monochrome-laser/specs/
+To recap, we can expect the following informations in the EEPROM
+memory:
 
-Similar part number can be seen in the following dump (407166):
-http://www.mikrocontroller.net/topic/369267
+* a standard header to verify if the EEPROM is correctly workding
+* a part number for model compatibility
+* a status/error value (to signal when the toner has caused a problem)
+* a 'dot' count number (and/or the number of printed pages)
+* a maximum 'dot' capacity (and/or the maximum number of pages to print)
+* a last used date field (and/or a first used data field)
 
-
-	00000000: 2000 0103 0101 0300 0000 ffff ffff ffff   ...............
-		  ^^^^ ^^^^ ^^^^ ^^^^      ^^^^ ^^^^ ^^^^
-		  header                   printer crash if 0x00
-
-	00000010: 1504 4d47 2700 1882 0000 0000 2000 0101  ..MG'....... ...
-		  ^^^^           ^^^^
-		  increase between two prints
-
-	00000020: 5830 3235 4d34 3331 3536 3620 0045 0000  X025M431566 .E..
-		  ^^^^ ^^^^ ^^^^ ^^^^ ^^^^ ^^^^
-                  written by printer
-
-
-	00000030: 0000 0000 0000 0000 0000 0106 0000 0000  ................
-		                           ^^^^
-		                           written by printer
-
-	00000040: 0000 0107 0000 0000 0000 0000 0000 0000  ................
-		       ^^^^
-		       increase between two prints
-
-	00000050: 0000 0000 0000 0106 2000 0101 2000 0101  ........ ... ...
-		                      ^^^^ ^^^^
-		                      written by printer
-
-	00000060: 0000 0000 0000 0000 0106 0000 0000 0000  ................
-		                      ^^^^
-		                      increase between two prints
-
-	00000070: 000e 715d 1000 1427 0000 0000 0000 0000  ..q]...'........
-		       ^^^^ ^^^^ ^^^^
-		       increase between two prints
-
-	00000080: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	00000090: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	000000a0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	000000b0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	000000c0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	000000d0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	000000e0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	000000f0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-
-From another ricoh printer:
-
-Black:
-
-	00000000: a800 0103 1201 01ff 6400 3430 3735 3433  ........d.407543
-	00000010: 1409 4142 1600 1626 ffff ffff ffff ffff  ..AB...&........
-	00000020: ffff ffff ffff ffff ffff ffff 6400 0000  ............d...
-	00000030: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	00000040: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	00000050: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	00000060: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	00000070: ffff ffff ffff ffff 0000 0000 0000 0000  ................
-
-Magenta:
-
-	00000000: a800 0103 0e03 01ff 6400 3430 3735 3435  ........d.407545
-	00000010: 1501 4142 1800 0372 ffff ffff ffff ffff  ..AB...r........
-	00000020: ffff ffff ffff ffff ffff ffff 6400 0000  ............d...
-	00000030: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	00000040: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	00000050: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	00000060: ffff ffff ffff ffff ffff ffff ffff ffff  ................
-	00000070: ffff ffff ffff ffff 0000 0000 0000 0000  ................
-
-Same pattern:
-
-	Magic + printer part number
-	Counter + 4142 + Counter
-
-=> We can try to reset the counter and hope for not double checks
-
+Unfortunatly, I was not able to figure out the memory layout but I
+wish you better luck! 
 
 Step 6: try some changes
 ========================
+
+If you are lucky enough that your toner chip is still working (printing), 
+you can dump the content of the EEPROM before and after printing a
+page. This might give you clues about the memory layout.
+
+The process is like this:
+
+* read the EEPROM content
+* make some changes base on an hypothesis
+* write the content into the EEPROM
+* try to print a page and restart if this does not work.
+
+In order to speed-up the process, i directly connect my Arduino to the
+chip inside the printer so i do not need to manipulate the printer
+during the experiments.
+
+![Picture of my working installation](/images/final_setup.jpg)
+
+As for me, i try a couple of random changes without success.
+Then i had the idea to erase all the memory except the addresses 0x0
+to 0x0f and it worked!
 
 Another advantage of the binary data: with xxd you can convert the
 binary data into a C header file. This C header file can be included
@@ -573,8 +502,13 @@ in your program.
 	unsigned int dump_bin_len = 256;
 
 
-Step 7: share youf findings
+Step 7: share your findings
 ===========================
+
+Congrats! You have done some work, collected some information and get
+a better understanding of your toner chip. Let the world know
+about your findings and learn from others!
+
 
 Bonus 1: snif the I2C commands
 =============================
