@@ -37,9 +37,9 @@ the [about page](/ABOUT.md).
 Step 0: the problem
 ===================
 
-The computer talks to the printer via a USB link (or maybe through
-wifi). The printer itself communicate with the toner chiip via an I2C
-or a SPI bus. In my particular case
+Your computer talks to your printer via a USB link (or maybe through
+wifi). The printer itself communicate with the toner chip via an I2C
+or a SPI bus.
 
 	+------------+           +-----------+            +-------------+
 	|    Host    |    USB    |           |    I2C     |    toner    |
@@ -47,8 +47,8 @@ or a SPI bus. In my particular case
 	|            |           |           |            |             |
 	+------------+           +-----------+            +-------------+
 
-So what we will do is to connect our Arduino to the toner chip to
-reset its memory like:
+So what we will do is to connect our Arduino directly to the toner
+chip like this:
 
 	+-----------+          +-----------+
 	|           |   I2C    |   toner   |
@@ -57,19 +57,35 @@ reset its memory like:
 	+-----------+          +-----------+
 
 
-One word on I2C: the IC2 bus is very common on embedded systems. For
-example, smartphones use them to connect the touchscreen or the motion
-sensor to the main processor chip. There is plenty of documentation,
-i like [this one from saleae](http://support.saleae.com/hc/en-us/articles/200730905-Learn-I2C-Inter-Integrated-Circuit).
+IC2 buses are very common on embedded systems. For example,
+smartphones use them to connect the touchscreen or the motion sensor
+to the main processor chip. There is plenty of documentation, i like
+[this one from saleae](http://support.saleae.com/hc/en-us/articles/200730905-Learn-I2C-Inter-Integrated-Circuit).
 
-More about I2C: http://www.i2c-bus.org/
+The full specification is avavailable at: http://www.i2c-bus.org/
+
+For your particalar printer, it might be an SPI bus instead of an I2C
+bus. But this does not really matter: the analysis procedure is the
+same.
 
 Step 1: the circuit
 ===================
 
-Now, let's analyse the circuit! On my Ricoh SP112, it is very simple,
-there is just a EEPOM memory and some resistances.
+The first step is to analyse the circuit. Here you should gather as
+much information as you can:
 
+* Read the part number and search it on the Internet.
+* search if other people have shared information about your printer.
+
+In my particular case, the chip look like a simple EEPROM memory. And
+this is was confirm by two blogs related to other model the Ricoh printers:
+
+* http://www.mikrocontroller.net/topic/369267
+* https://esdblog.org/ricoh-sp-c250dn-laser-printer-toner-hack/
+
+I still could not find the exact EERPOM model, but it is of the 24xxx
+family.
+ 
 ![Front chip](/images/front_circuit.png)
 ![Front chip](/images/back_circuit.png)
 
