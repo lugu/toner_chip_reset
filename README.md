@@ -75,10 +75,10 @@ The first step is to analyse the circuit. Here you should gather as
 much information as you can:
 
 * Read the part number and search it on the Internet.
-* search if other people have shared information about your printer.
+* Search if other people have shared information about your printer.
 
-In my particular case, the chip look like a simple EEPROM memory. And
-this is was confirm by two blogs related to other model the Ricoh printers:
+In my case, the chip looked like an EEPROM memory. This is was
+confirmed by two blogs discussing other model Ricoh printers:
 
 * http://www.mikrocontroller.net/topic/369267
 * https://esdblog.org/ricoh-sp-c250dn-laser-printer-toner-hack/
@@ -89,9 +89,12 @@ family.
 ![Front chip](/images/front_circuit.png)
 ![Front chip](/images/back_circuit.png)
 
-More about EERPOM memory: https://en.wikipedia.org/wiki/EEPROM
+Your particular circuit will be different from this one.
 
-The rest of the tutorial is about reading and writing to this EEPROM
+If you have absolutly no idea, jump to the section: "Bonus 1: snif the
+I2C commands" at the end of this page.
+
+The rest of the tutorial is about how to read and write this EEPROM
 memory.
 
 Step 2: connect your arduino
