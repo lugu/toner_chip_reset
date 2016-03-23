@@ -1,12 +1,11 @@
 
 Here are some advices to reset your toner chip with an Arduino.
 
-Introduction
-============
+# Introduction
 
 Some printer toner comes with a small circuit like:
 
-![Picture of toner](/images/sp112_toner.png)
+![Picture of toner](images/sp112_toner.png)
 
 In order to reuse this kind of toner, there are two steps:
 
@@ -30,12 +29,11 @@ circuit, read the chip memory and write it back so the toner can
 function again.
 
 For more information about why manufaturer include those chips, read
-the [about page](/ABOUT.md).
+the [about page](ABOUT.md).
 
-![Picture of the font circuit](/images/front_circuit.jpg)
+![Picture of the font circuit](images/front_circuit.jpg)
 
-Step 0: the problem
-===================
+# Step 0: the problem
 
 Your computer talks to your printer via a USB link (or maybe through
 wifi). The printer itself communicate with the toner chip via an I2C
@@ -68,8 +66,7 @@ For your particalar printer, it might be an SPI bus instead of an I2C
 bus. But this does not really matter: the analysis procedure is the
 same.
 
-Step 1: the circuit
-===================
+# Step 1: the circuit
 
 The first step is to analyse the circuit. Here you should gather as
 much information as you can:
@@ -86,8 +83,8 @@ confirmed by two blogs discussing other model Ricoh printers:
 I still could not find the exact EERPOM model, but it is of the 24xxx
 family.
  
-![Front chip](/images/front_circuit.png)
-![Front chip](/images/back_circuit.png)
+![Front chip](images/front_circuit.png)
+![Front chip](images/back_circuit.png)
 
 Your particular circuit will be different from this one.
 
@@ -121,7 +118,7 @@ address of the EEPROM.
 If you know the EEPROM model from the circuit analysis, you can
 read the datasheet and find the clock rate and address like this:
 
-For example the [datasheet of the component FM24C02B](/datasheet/FM24C02B-04B-08B-16B.pdf)
+For example the [datasheet of the component FM24C02B](datasheet/FM24C02B-04B-08B-16B.pdf)
 indicates an operating clock of 1MHz at 3.3V.
 The datasheet indicates how to calculate the address according to the
 PIN A0, A1 and A2. In binary, the address is computed like this: ``1 0
@@ -305,7 +302,7 @@ Step 4: reading the EEPROM
 ==========================
 
 Since we know how to communicate with the chip, let's read the content
-of the memory. For 24xxx EEPROM, the [datasheet for FM24C02B](/datasheet/FM24C02B-04B-08B-16B.pdf) explains how to complete a read operation:
+of the memory. For 24xxx EEPROM, the [datasheet for FM24C02B](datasheet/FM24C02B-04B-08B-16B.pdf) explains how to complete a read operation:
 
 	master send start condition
 	master send eeprom address + read bit
@@ -464,7 +461,7 @@ In order to speed-up the process, i directly connect my Arduino to the
 chip inside the printer so i do not need to manipulate the printer
 during the experiments.
 
-![Picture of my working installation](/images/final_setup.jpg)
+![Picture of my working installation](images/final_setup.jpg)
 
 As for me, i try a couple of random changes without success.
 Then i had the idea to erase all the memory except the addresses 0x0
@@ -546,13 +543,13 @@ The following pictures explain the settings:
    toner in the printer.
 2. connect the logical analyzer.
 
-![Picture of the back circuit](/images/back_circuit.jpg)
-![Picture of logical analyzer in the printer](/images/logical_analyser.jpg)
+![Picture of the back circuit](images/back_circuit.jpg)
+![Picture of logical analyzer in the printer](images/logical_analyser.jpg)
 
 To capture the data transfert, you can use a graphical tool
 like [Pulseview](https://sigrok.org/wiki/PulseView).
 
-![Picture of Pulseview interface](/pulseview/capture_eeprom.png)
+![Picture of Pulseview interface](pulseview/capture_eeprom.png)
 
 You can also use the command line tool called
 [sigrok-cli](https://sigrok.org/wiki/Sigrok-cli) as demonstrated
