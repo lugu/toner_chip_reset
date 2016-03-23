@@ -92,7 +92,7 @@ I2C commands" at the end of this page.
 The rest of the tutorial is about how to read and write this EEPROM
 memory.
 
-Step 2: connect your arduino
+Step 2: connect your Arduino
 ============================
 
 Depending on the board the I2C pins are:
@@ -363,7 +363,7 @@ In order to speed-up the process, i directly connect my Arduino to the
 chip inside the printer so i do not need to manipulate the printer
 during the experiments.
 
-![Picture of my working installation](images/final_setup.jpg)
+![Picture working installation](images/final_setup.jpg)
 
 As for me, i try a couple of random changes without success.
 Then i had the idea to erase all the memory except the addresses 0x0
@@ -445,8 +445,9 @@ The following pictures explain the settings:
    toner in the printer.
 2. connect the logical analyzer.
 
-![Picture of the back circuit](images/back_circuit.jpg)
-![Picture of logical analyzer in the printer](images/logical_analyser.jpg)
+![Picture back circuit](images/back_circuit.jpg)
+
+![Picture logical analyzer printer](images/logical_analyser.jpg)
 
 To capture the data transfert, you can use a graphical tool
 like [Pulseview](https://sigrok.org/wiki/PulseView).
