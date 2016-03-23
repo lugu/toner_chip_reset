@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Reset toner chip by lugu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Reset toner chip</h1>
+      <h2 class="project-tagline">Avices to reset your toner chip with an Arduino</h2>
+      <a href="https://github.com/lugu/reset_toner_chip" class="btn">View on GitHub</a>
+      <a href="https://github.com/lugu/reset_toner_chip/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/lugu/reset_toner_chip/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <p>Here are some advices to reset your toner chip with an Arduino.</p>
+
+<h1>
+<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Introduction</h1>
+
+<p>Some printer toner comes with a small circuit like:</p>
+
+<p><img src="images/sp112_toner.png" alt="Picture of toner"></p>
+
+<p>In order to reuse this kind of toner, there are two steps:</p>
+
+<ol>
+<li>refill the toner with ink (if needed)</li>
+<li>reset the toner chip (or replace it)</li>
+</ol>
+
+<p>There is <a href="www.uni-kit.com/pdf/tonerrefillinstructions.pdf">plenty of information</a> explaining how to refill the
+toner but little information on how to erase the toner chip.</p>
+
+<p>This document deals with the second part: how to analyse the chip and
+reset it.</p>
+
+<p>It took me a while to get everything setup and to have my toner chip
+reset so i would like to share this process in order to help other to
+do the same on their printer.</p>
+
+<p>We will go step-by-step to understand the problem, analyse the
+circuit, read the chip memory and write it back so the toner can
+function again.</p>
+
+<p>For more information about why manufaturer include those chips, read
+the <a href="ABOUT.md">about page</a>.</p>
+
+<p><img src="images/front_circuit.jpg" alt="Picture of the font circuit"></p>
+
+<h1>
+<a id="step-0-the-problem" class="anchor" href="#step-0-the-problem" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 0: the problem</h1>
+
+<p>Your computer talks to your printer via a USB link (or maybe through
+wifi). The printer itself communicate with the toner chip via an I2C
+or a SPI bus.</p>
+
+<pre><code>+------------+           +-----------+            +-------------+
+|    Host    |    USB    |           |    I2C     |    toner    |
+|  computer  | &lt;-------&gt; |  Printer  | &lt;--------&gt; |    chip     |
+|            |           |           |            |             |
++------------+           +-----------+            +-------------+
+</code></pre>
+
+<p>So what we will do is to connect our Arduino directly to the toner
+chip like this:</p>
+
+<pre><code>+-----------+          +-----------+
+|           |   I2C    |   toner   |
+|  Arduino  | &lt;------&gt; |   chip    |
+|           |          |           |
++-----------+          +-----------+
+</code></pre>
+
+<p>IC2 buses are very common on embedded systems. For example,
+smartphones use them to connect the touchscreen or the motion sensor
+to the main processor chip. There is plenty of documentation, i like
+<a href="http://support.saleae.com/hc/en-us/articles/200730905-Learn-I2C-Inter-Integrated-Circuit">this one from saleae</a>.</p>
+
+<p>The full specification is avavailable at: <a href="http://www.i2c-bus.org/">http://www.i2c-bus.org/</a></p>
+
+<p>For your particalar printer, it might be an SPI bus instead of an I2C
+bus. But this does not really matter: the analysis procedure is the
+same.</p>
+
+<h1>
+<a id="step-1-the-circuit" class="anchor" href="#step-1-the-circuit" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 1: the circuit</h1>
+
+<p>The first step is to analyse the circuit. Here you should gather as
+much information as you can:</p>
+
+<ul>
+<li>Read the part number and search it on the Internet.</li>
+<li>Search if other people have shared information about your printer.</li>
+</ul>
+
+<p>In my case, the chip looked like an EEPROM memory. This is was
+confirmed by two blogs discussing other model Ricoh printers:</p>
+
+<ul>
+<li><a href="http://www.mikrocontroller.net/topic/369267">http://www.mikrocontroller.net/topic/369267</a></li>
+<li><a href="https://esdblog.org/ricoh-sp-c250dn-laser-printer-toner-hack/">https://esdblog.org/ricoh-sp-c250dn-laser-printer-toner-hack/</a></li>
+</ul>
+
+<p>I still could not find the exact EERPOM model, but it is of the 24xxx
+family.</p>
+
+<p><img src="images/front_circuit.png" alt="Front chip">
+<img src="images/back_circuit.png" alt="Front chip"></p>
+
+<p>Your particular circuit will be different from this one.</p>
+
+<p>If you have absolutly no idea, jump to the section: "Bonus 1: snif the
+I2C commands" at the end of this page.</p>
+
+<p>The rest of the tutorial is about how to read and write this EEPROM
+memory.</p>
+
+<h1>
+<a id="step-2-connect-your-arduino" class="anchor" href="#step-2-connect-your-arduino" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 2: connect your Arduino</h1>
+
+<p>Depending on the board the I2C pins are:</p>
+
+<table>
+<thead>
+<tr>
+<th align="center">Board</th>
+<th align="center">I2C pins</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">Uno, Ethernet</td>
+<td align="center">A4 (SDA), A5 (SCL)</td>
+</tr>
+<tr>
+<td align="center">Mega2560</td>
+<td align="center">20 (SDA), 21 (SCL)</td>
+</tr>
+<tr>
+<td align="center">Due</td>
+<td align="center">20 (SDA), 21 (SCL)</td>
+</tr>
+<tr>
+<td align="center">Leonardo</td>
+<td align="center">2 (SDA), 3 (SCL)</td>
+</tr>
+</tbody>
+</table>
+
+<p>Then connect GND and VCC to 3.3V.</p>
+
+<h1>
+<a id="step-3-find-the-i2c-clock-and-address" class="anchor" href="#step-3-find-the-i2c-clock-and-address" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 3: find the I2C clock and address</h1>
+
+<p>To communicate on an I2C bus, we need to know the clock speed and the
+address of the EEPROM.</p>
+
+<p>If you know the EEPROM model from the circuit analysis, you can
+read the datasheet and find the clock rate and address like this:</p>
+
+<p>For example the <a href="datasheet/FM24C02B-04B-08B-16B.pdf">datasheet of the component FM24C02B</a>
+indicates an operating clock of 1MHz at 3.3V.
+The datasheet indicates how to calculate the address according to the
+PIN A0, A1 and A2. In binary, the address is computed like this: <code>1 0
+1 0 A2 A1 A0</code>.</p>
+
+<p>So if the configuration is:</p>
+
+<pre><code>A0 = 1
+A1 = 1
+A2 = 0
+</code></pre>
+
+<p>The address is <code>1 0 1 0 0 1 1</code> (83).</p>
+
+<p>Note: 1MHz seems to be the upper bound of the my Arduino Mega can reach.
+So I just use 800 kHz, see the <a href="http://electronics.stackexchange.com/questions/29457/how-to-make-arduino-do-high-speed-i2c">full discussion</a>.</p>
+
+<p>If you don't know the clock rate and the device address on the I2C
+bus, you can scan all the possible I2C addresses at different clock
+rate. The directory scanner have a sketch to do this. Here is the
+output of the program execution on my Arduino:</p>
+
+<pre><code>Arduino I2C Scanner - 0.1.06
+
+Scanmode:
+    s = single scan
+    c = continuous scan - 1 second delay
+    q = quit continuous scan
+    d = toggle latency delay between successful tests. 0 - 5 ms
+Output:
+    p = toggle printAll - printFound.
+    h = toggle header - noHeader.
+    a = toggle address range, 0..127 - 8..120
+Speeds:
+    0 = 50 - 800 Khz
+    1 = 100 KHz only
+    2 = 200 KHz only
+    4 = 400 KHz only
+    8 = 800 KHz only
+
+    ? = help - this page
+
+TIME    DEC HEX     50  100 200 250 400 500 800 [KHz]
+---------------------------------------------------------------------------------------------
+2987    0   0x00        .   .   .   .   .   .   .
+2990    1   0x01        .   .   .   .   .   .   . 
+2992    2   0x02        .   .   .   .   .   .   . 
+2994    3   0x03        .   .   .   .   .   .   . 
+2997    4   0x04        .   .   .   .   .   .   . 
+2999    5   0x05        .   .   .   .   .   .   . 
+3002    6   0x06        .   .   .   .   .   .   . 
+3004    7   0x07        .   .   .   .   .   .   . 
+3007    8   0x08        .   .   .   .   .   .   . 
+3009    9   0x09        .   .   .   .   .   .   . 
+3012    10  0x0A        .   .   .   .   .   .   . 
+[...]
+3196    80  0x50        .   .   .   .   .   .   . 
+3200    81  0x51        .   .   .   .   .   .   . 
+3202    82  0x52        .   .   .   .   .   .   . 
+3205    83  0x53        V   V   V   V   V   V   V 
+3207    84  0x54        .   .   .   .   .   .   . 
+3210    85  0x55        .   .   .   .   .   .   . 
+3212    86  0x56        .   .   .   .   .   .   . 
+3215    87  0x57        .   .   .   .   .   .   . 
+3218    88  0x58        .   .   .   .   .   .   . 
+3220    89  0x59        .   .   .   .   .   .   . 
+3223    90  0x5A        .   .   .   .   .   .   . 
+[...]
+3304    120 0x78        .   .   .   .   .   .   . 
+3306    121 0x79        .   .   .   .   .   .   . 
+3309    122 0x7A        .   .   .   .   .   .   . 
+3312    123 0x7B        .   .   .   .   .   .   . 
+3314    124 0x7C        .   .   .   .   .   .   . 
+3317    125 0x7D        .   .   .   .   .   .   . 
+3320    126 0x7E        .   .   .   .   .   .   . 
+3322    127 0x7F        .   .   .   .   .   .   . 
+
+1 device find in 347 milliseconds.
+</code></pre>
+
+<p>From here, we know the device address on the I2C bus is 83 (0x53) and
+the operating clock is anything between 50 kHz and 800 kHz.</p>
+
+<h1>
+<a id="step-4-reading-the-eeprom" class="anchor" href="#step-4-reading-the-eeprom" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 4: reading the EEPROM</h1>
+
+<p>Since we know how to communicate with the chip, let's read the content
+of the memory. For 24xxx EEPROM, the <a href="datasheet/FM24C02B-04B-08B-16B.pdf">datasheet for FM24C02B</a> explains how to complete a read operation:</p>
+
+<pre><code>master send start condition
+master send eeprom address + read bit
+master send data address
+master send start condition
+master send eeprom address + read bit
+device respond with data
+master send stop condition
+
+STOP condition mandatory between writes.
+Write cycle: 5 ms.
+</code></pre>
+
+<p>The function "printRandomAddress" of the Reset.ino sketch implements
+this random read operation. Once the read operation works, you can
+print each bytes of the EEPROM one by one and save them in a file.</p>
+
+<div class="highlight highlight-source-shell"><pre>    $ head dump.txt
+    0x20
+    0x0
+    0x1
+    0x3
+    0x1
+    0x1
+    0x3
+    0x0
+    0x0
+    0x0</pre></div>
+
+<p>Next I converted the text file into a binary format. I found binary
+format easier to analyze with xxd:</p>
+
+<pre><code>$ head -n 256 dump.txt | xargs printf "%02x\n" | xxd -c 1 -p -r &gt; dump.bin
+$ xxd dump.bin
+00000000: 2000 0103 0101 0300 0000 ffff ffff ffff   ...............
+00000010: 1504 4d47 2700 1882 0000 0000 2000 0101  ..MG'....... ...
+00000020: 5830 3235 4d34 3331 3536 3620 0045 0000  X025M431566 .E..
+00000030: 0000 0000 0000 0000 0000 0106 0000 0000  ................
+00000040: 0000 0107 0000 0000 0000 0000 0000 0000  ................
+00000050: 0000 0000 0000 0106 2000 0101 2000 0101  ........ ... ...
+00000060: 0000 0000 0000 0000 0106 0000 0000 0000  ................
+00000070: 000e 715d 1000 1427 0000 0000 0000 0000  ..q]...'........
+00000080: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+00000090: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+000000a0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+000000b0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+000000c0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+000000d0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+000000e0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+000000f0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+</code></pre>
+
+<p>Here we can see:</p>
+
+<ul>
+<li>there seems to be a header (0x0 to 0x0f),</li>
+<li>followed by some numbers (0x10 to 0x1f),</li>
+<li>followed by a string (X025M431566)</li>
+<li>followed by some sparse values</li>
+</ul>
+
+<p>This does not make much sense. The next step is to figure out what
+those values are for.</p>
+
+<h1>
+<a id="step-5-understand-the-data" class="anchor" href="#step-5-understand-the-data" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 5: understand the data</h1>
+
+<p>In order to understand the memory layout, we have to think like a
+detective.</p>
+
+<p>The EEPROM is a simple data storage. The printer might wants to:</p>
+
+<ul>
+<li>read the toner model (to check compatibility)</li>
+<li>store the number of printed pages and/or the number of printed dot</li>
+<li>mark is as used by a particular printer to prevent second hand market</li>
+<li>mark the date of the first and last usage to make it out of date.</li>
+<li>store toner capacity of page and 'dot' (can be a cound down value).</li>
+</ul>
+
+<p>This is purely speculative at this stage.</p>
+
+<p>In the search for evidences, we can capture the USB packet sent by the
+computer to the printer. Thanks to tcpdump, this is very easy (see
+"Bonus 2: snif the USB packets").</p>
+
+<p>My particular printer uses 
+<a href="https://en.wikipedia.org/wiki/Printer_Job_Language">Printer Job Language: PJL</a>.
+Here is a data transfered over USB when I print a page:</p>
+
+<pre><code>%-12345X@PJL
+@PJL SET TIMESTAMP=2015/09/14 21:15:14
+@PJL SET FILENAME=test - Notepad
+@PJL SET COMPRESS=JBIG
+@PJL SET USERNAME=IEUser
+@PJL SET COVER=OFF
+@PJL SET HOLD=OFF
+@PJL SET PAGESTATUS=START
+@PJL SET COPIES=1
+@PJL SET MEDIASOURCE=TRAY1
+@PJL SET MEDIATYPE=PLAINRECYCLE
+@PJL SET PAPER=LETTER
+@PJL SET PAPERWIDTH=5100
+@PJL SET PAPERLENGTH=6600
+@PJL SET RESOLUTION=600
+@PJL SET IMAGELEN=691
+[... image data ... ]
+@PJL SET DOTCOUNT=10745
+@PJL SET PAGESTATUS=END
+@PJL EOJ
+%-12345X
+</code></pre>
+
+<p>The important piece of information are:</p>
+
+<ul>
+<li>the DOTCOUNT value</li>
+<li>the TIMESTAMP value</li>
+</ul>
+
+<p>One note about dates: To implement a simple 'out of date' mechanism,
+year/mount/day is enough. But if the toner needs to warm-up or cool
+down hours/minutes/seconds might also required. 2016 converted to
+hexadecimal is 7E0. Be aware of Unix epoch format. It is well suited
+for this need. Here is an example of a date in hexadecimal values:</p>
+
+<pre><code>$ date --date='@1456056478'
+Sun Feb 21 13:07:58 CET 2016
+$ echo "obase=16; 1456056478" | bc
+56C9A89E
+</code></pre>
+
+<p>32 bits is enough to live until 2038, which certainly exceeded the expected
+life of such product.</p>
+
+<p>To recap, we can expect the following informations in the EEPROM
+memory:</p>
+
+<ul>
+<li>a standard header to verify if the EEPROM is correctly workding</li>
+<li>a part number for model compatibility</li>
+<li>a status/error value (to signal when the toner has caused a problem)</li>
+<li>a 'dot' count number (and/or the number of printed pages)</li>
+<li>a maximum 'dot' capacity (and/or the maximum number of pages to print)</li>
+<li>a last used date field (and/or a first used data field)</li>
+</ul>
+
+<p>Unfortunatly, I was not able to figure out the memory layout but I
+wish you better luck! </p>
+
+<h1>
+<a id="step-6-try-some-changes" class="anchor" href="#step-6-try-some-changes" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 6: try some changes</h1>
+
+<p>If you are lucky enough that your toner chip is still working (printing), 
+you can dump the content of the EEPROM before and after printing a
+page. This might give you clues about the memory layout.</p>
+
+<p>The process is like this:</p>
+
+<ul>
+<li>read the EEPROM content</li>
+<li>make some changes base on an hypothesis</li>
+<li>write the content into the EEPROM</li>
+<li>try to print a page and restart if this does not work.</li>
+</ul>
+
+<p>In order to speed-up the process, i directly connect my Arduino to the
+chip inside the printer so i do not need to manipulate the printer
+during the experiments.</p>
+
+<p><img src="images/final_setup.jpg" alt="Picture working installation"></p>
+
+<p>As for me, i try a couple of random changes without success.
+Then i had the idea to erase all the memory except the addresses 0x0
+to 0x0f and it worked!</p>
+
+<p>Another advantage of the binary data: with xxd you can convert the
+binary data into a C header file. This C header file can be included
+in your program.</p>
+
+<pre><code>$ xxd -i dump.bin | tee dump_bin.h
+unsigned char dump_bin[] = {
+  0x20, 0x00, 0x01, 0x03, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0x15, 0x04, 0x4d, 0x47, 0x27, 0x00, 0x18, 0x82,
+  0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x01, 0x01, 0x58, 0x30, 0x32, 0x35,
+  0x4d, 0x34, 0x33, 0x31, 0x35, 0x36, 0x36, 0x20, 0x00, 0x45, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x06,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x01, 0x06, 0x20, 0x00, 0x01, 0x01, 0x20, 0x00, 0x01, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x06, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x0e, 0x71, 0x5d, 0x10, 0x00, 0x14, 0x27,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff
+};
+unsigned int dump_bin_len = 256;
+</code></pre>
+
+<h1>
+<a id="step-7-share-your-findings" class="anchor" href="#step-7-share-your-findings" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 7: share your findings</h1>
+
+<p>Congrats! You have done some work, collected some information and get
+a better understanding of your toner chip. Let the world know
+about your findings and learn from others!</p>
+
+<h1>
+<a id="bonus-1-snif-the-i2c-commands" class="anchor" href="#bonus-1-snif-the-i2c-commands" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Bonus 1: snif the I2C commands</h1>
+
+<p>One way to gain some insight about the memory layout, is to spy the
+communication between the printer and the toner during the printing
+processus.</p>
+
+<p>In order to do so, we can use a logical analyser. This is a simple
+equipement that will record the logical state of the wires.</p>
+
+<pre><code>+------------+           +-----------+            +-------------+
+|    Host    |    USB    |           |    I2C     |    toner    |
+|  computer  | &lt;-------&gt; |  Printer  | &lt;--------&gt; |    chip     |
+|            |           |           |      ^     |             |
++------------+           +-----------+      |     +-------------+
+                                            |
+                                        logical
+                                        analyser
+</code></pre>
+
+<p>This can be very useful to learn:</p>
+
+<ul>
+<li>the general properties of the communication (type of
+bus, clock speed, device address).</li>
+<li>what memory address the printer read and write</li>
+</ul>
+
+<p>The main open source project to use logical analysers is
+<a href="http://sigrok.org">Sigrok</a>. For the list of supported analysers
+please refer to <a href="https://sigrok.org/wiki/Supported_hardware">supported hardware page</a>.</p>
+
+<p>The following pictures explain the settings:</p>
+
+<ol>
+<li>attach the wires to the circuit and put back the circuit on the
+toner in the printer.</li>
+<li>connect the logical analyzer.</li>
+</ol>
+
+<p><img src="images/back_circuit.jpg" alt="Picture back circuit"></p>
+
+<p><img src="images/logical_analyser.jpg" alt="Picture logical analyzer printer"></p>
+
+<p>To capture the data transfert, you can use a graphical tool
+like <a href="https://sigrok.org/wiki/PulseView">Pulseview</a>.</p>
+
+<p><img src="pulseview/capture_eeprom.png" alt="Picture of Pulseview interface"></p>
+
+<p>You can also use the command line tool called
+<a href="https://sigrok.org/wiki/Sigrok-cli">sigrok-cli</a> as demonstrated
+bellow:</p>
+
+<div class="highlight highlight-source-shell"><pre>    $ sigrok-cli -i start_printer_failed.sr -P i2c:scl=2:sda=3,eeprom24xx
+    Control code bits: 1010
+    Address bit 2: 0
+    Address bit 1: 1
+    Address bit 0: 1
+    R/W bit: write
+    Control word
+    Warning: Slave replied, but master aborted<span class="pl-k">!</span>
+    Control code bits: 1010
+    Address bit 2: 0
+    Address bit 1: 1
+    Address bit 0: 1
+    R/W bit: write
+    Control word
+    Control code bits: 1010
+    Address bit 2: 0
+    Address bit 1: 1
+    Address bit 0: 1
+    R/W bit: <span class="pl-c1">read</span>
+    Control word
+    Word address byte: 00
+    Sequential random <span class="pl-c1">read</span> (addr=00, 128 bytes): 20 00 01 03 01 01
+    03 00 00 00 FF FF FF FF FF FF 15 04 4D 47 27 00 18 82 00 00 00 00 20
+    00 01 01 58 30 32 35 4D 34 33 31 35 36 36 20 00 45 00 00 00 00 00 00
+    00 00 00 00 00 00 01 06 00 00 00 00 00 00 01 07 00 00 00 00 00 00 00
+    00 00 00 00 00 00 00 00 00 00 00 01 06 20 00 01 01 20 00 01 01 00 00
+    00 00 00 00 00 00 01 06 00 00 00 00 00 00 00 0E 73 51 10 00 14 27 00
+    00 00 00 00 00 00 00
+    Control code bits: 1010
+    Address bit 2: 0
+    Address bit 1: 1
+    Address bit 0: 1
+    R/W bit: write
+    Control word
+    Word address byte: 76
+    Word address
+    Data byte 76: 14
+    Data
+    Byte write (addr=76, 1 byte): 14
+    Control code bits: 1010
+    Address bit 2: 0
+    Address bit 1: 1
+    Address bit 0: 1
+    R/W bit: write
+    Control word
+    Word address byte: 70
+    Word address
+    Data byte 70: 00
+    Data byte 71: 0E
+    Data byte 72: 75
+    Data byte 73: 45
+    Data
+    Page write (addr=70, 4 bytes): 00 0E 75 45
+    Control code bits: 1010
+    Address bit 2: 0
+    Address bit 1: 1
+    Address bit 0: 1
+    R/W bit: write
+    Control word
+    Word address byte: 70
+    Word address
+    Data byte 70: 00
+    Data byte 71: 0E
+    Data byte 72: 77
+    Data byte 73: 39
+    Data
+    Page write (addr=70, 4 bytes): 00 0E 77 39
+    Control code bits: 1010
+    Address bit 2: 0
+    Address bit 1: 1
+    Address bit 0: 1
+    R/W bit: write
+    Control word
+    Word address byte: 77
+    Word address
+    Data byte 77: 5A
+    Data
+    Byte write (addr=77, 1 byte): 5A
+    Control code bits: 1010
+    Address bit 2: 0
+    Address bit 1: 1
+    Address bit 0: 1
+    R/W bit: write
+    Control word
+    Word address byte: 70
+    Word address
+    Data byte 70: 00
+    Data byte 71: 0E
+    Data byte 72: 77
+    Data byte 73: 8D
+    Data
+    Page write (addr=70, 4 bytes): 00 0E 77 8D</pre></div>
+
+<p>How to read this: one sequential read of the content of the eeprom,
+followed by a sequence of write operations: 4 byte at 0x70, 1 byte at
+0x76. This the printer read all the eeprom, it is difficult to figure
+out which address hold which information.</p>
+
+<h1>
+<a id="bonus-2-snif-the-usb-packets" class="anchor" href="#bonus-2-snif-the-usb-packets" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Bonus 2: snif the USB packets</h1>
+
+<p>Here is an example of USB command sent by the proprietary windows
+driver to the printer (captured with tcpdump when running windows
+inside qemu):</p>
+
+<pre><code>%-12345X@PJL
+@PJL SET TIMESTAMP=2015/09/14 21:15:14
+@PJL SET FILENAME=test - Notepad
+@PJL SET COMPRESS=JBIG
+@PJL SET USERNAME=IEUser
+@PJL SET COVER=OFF
+@PJL SET HOLD=OFF
+@PJL SET PAGESTATUS=START
+@PJL SET COPIES=1
+@PJL SET MEDIASOURCE=TRAY1
+@PJL SET MEDIATYPE=PLAINRECYCLE
+@PJL SET PAPER=LETTER
+@PJL SET PAPERWIDTH=5100
+@PJL SET PAPERLENGTH=6600
+@PJL SET RESOLUTION=600
+@PJL SET IMAGELEN=691
+[... image data ... ]
+@PJL SET DOTCOUNT=10745
+@PJL SET PAGESTATUS=END
+@PJL EOJ
+%-12345X
+</code></pre>
+
+<h1>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h1>
+
+<div class="highlight highlight-source-shell"><pre>    $ make
+    $ make upload
+    $ picocom -b 115200 /dev/ttyACM0</pre></div>
+
+<h1>
+<a id="links" class="anchor" href="#links" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Links</h1>
+
+<p>Blog:
+    <a href="http://www.hobbytronics.co.uk/arduino-external-eeprom">http://www.hobbytronics.co.uk/arduino-external-eeprom</a>
+    <a href="http://www.hobbytronics.co.uk/eeprom-page-write">http://www.hobbytronics.co.uk/eeprom-page-write</a>
+    <a href="http://lusorobotica.com/index.php/topic,461.msg2738.html">http://lusorobotica.com/index.php/topic,461.msg2738.html</a></p>
+
+<p>Arduino:
+    <a href="https://www.arduino.cc/en/Reference/Wire">https://www.arduino.cc/en/Reference/Wire</a></p>
+
+<p>Tonner investigations:
+    <a href="http://www.mikrocontroller.net/topic/369267">http://www.mikrocontroller.net/topic/369267</a>
+    <a href="https://esdblog.org/ricoh-sp-c250dn-laser-printer-toner-hack/">https://esdblog.org/ricoh-sp-c250dn-laser-printer-toner-hack/</a>
+    <a href="http://rumburg.org/printerhack/">http://rumburg.org/printerhack/</a></p>
+
+<p>Toner chip reset for sale:
+    <a href="http://www.aliexpress.com/item/chip-FOR-RICOH-imagio-SP-112-SF-chip-MAILING-MACHINE-printer-POSTAGE-printer-for-Ricoh-100/32261857176.html">http://www.aliexpress.com/item/chip-FOR-RICOH-imagio-SP-112-SF-chip-MAILING-MACHINE-printer-POSTAGE-printer-for-Ricoh-100/32261857176.html</a>
+    <a href="http://www.ebay.com/itm/Toner-cartridge-refill-kit-for-Ricoh-Aficio-SP112-SP112SU-SP112SF-407166-non-OEM-/161312940764">http://www.ebay.com/itm/Toner-cartridge-refill-kit-for-Ricoh-Aficio-SP112-SP112SU-SP112SF-407166-non-OEM-/161312940764</a></p>
+
+<p>Ricoh:
+    <a href="https://www.techdata.com/business/Ricoh/files/july2014/CurrentMSRP.pdf">https://www.techdata.com/business/Ricoh/files/july2014/CurrentMSRP.pdf</a>
+    <a href="http://support.ricoh.com/bb_v1oi/pub_e/oi/0001044/0001044844/VM1018655/M1018655.pdf">http://support.ricoh.com/bb_v1oi/pub_e/oi/0001044/0001044844/VM1018655/M1018655.pdf</a></p>
+
+<p>Datasheets:
+    <a href="http://www.gaw.ru/pdf/Rohm/memory/br24l01.pdf">http://www.gaw.ru/pdf/Rohm/memory/br24l01.pdf</a>
+    <a href="http://www.rinkem.com/web/userfiles/productfile/upload/201009/FM24C02B-04B-08B-16B.pdf">http://www.rinkem.com/web/userfiles/productfile/upload/201009/FM24C02B-04B-08B-16B.pdf</a></p>
+
+<p>Logical Analyser &amp; I2C:
+    <a href="http://support.saleae.com/hc/en-us/articles/202740085-Using-Protocol-Analyzers">http://support.saleae.com/hc/en-us/articles/202740085-Using-Protocol-Analyzers</a>
+    <a href="http://support.saleae.com/hc/en-us/articles/200730905-Learn-I2C-Inter-Integrated-Circuit">http://support.saleae.com/hc/en-us/articles/200730905-Learn-I2C-Inter-Integrated-Circuit</a></p>
+
+<h1>
+<a id="ricoh-sp112-led" class="anchor" href="#ricoh-sp112-led" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Ricoh SP112 LED</h1>
+
+<pre><code>Left LED: Power Indicator
+This indicator lights up blue when the machine is turned on.
+It flashes when a print job is received and while printing is in progress.
+
+Right LED: Alert Indicator
+This indicator lights up red when the machine runs out of paper or consumables,
+when the paper settings do match the settings specified by the driver,
+or when other abnormalities occur.
+</code></pre>
+
+<h1>
+<a id="todo" class="anchor" href="#todo" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Todo</h1>
+
+<ul>
+<li>[x] Create arduino hello world</li>
+<li>[x] Read internal EEPROM</li>
+<li>[x] Draw the cricuit</li>
+<li>[x] Understand the cricuit</li>
+<li>[x] Try I2C clock at 400kHz and 1MHz</li>
+<li>[x] Scan for device =&gt; use MultiSpeedScanner</li>
+<li>[x] Analyse I2C trame with a logical analyser</li>
+<li>[x] Visualize I2C packets with pulseview</li>
+<li>[x] Read one EEPROM datasheet</li>
+<li>[x] Debug I2C addresses sent (1010001 and not 0101000) ~ frequence to high</li>
+<li>[x] Verifies the timming between read and write operations (5ms)</li>
+<li>[x] Find the exact EEPROM chip model</li>
+<li>[x] Find the EEPROM address (0x53)</li>
+<li>[x] Read the EPPROM chip</li>
+<li>[x] Order sp112 reset chip from internet</li>
+<li>[x] Analyse the EEPROM dump</li>
+<li>[x] Make a data hypothesis</li>
+<li>[x] Verify the write function</li>
+<li>[x] Dump a new reset chip</li>
+<li>[x] Write the EEPROM with a dump of a new reset chip</li>
+<li>[x] Test with the printer</li>
+<li>[ ] Learn about README.md format (image insertion &amp; style)</li>
+<li>[ ] Write an article about this</li>
+</ul>
+
+<p><a href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" src="https://i.creativecommons.org/l/by/4.0/88x31.png"></a><br>This work is licensed under a <a href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/lugu/reset_toner_chip">Reset toner chip</a> is maintained by <a href="https://github.com/lugu">lugu</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
