@@ -19,7 +19,7 @@ This document deals with the second part: how to analyse the chip and
 reset it.
 
 It took me a while to get everything setup and to have my toner chip
-reset so i would like to share this process in order to help other to
+reset so I would like to share this process in order to help others to
 do the same on their printer.
 
 We will go step-by-step to understand the problem, analyse the
@@ -55,12 +55,12 @@ chip like this:
 
 IC2 buses are very common on embedded systems. For example,
 smartphones use them to connect the touchscreen or the motion sensor
-to the main processor chip. There is plenty of documentation, i like
+to the main processor chip. There is plenty of documentation, I like
 [this one from saleae](http://support.saleae.com/hc/en-us/articles/200730905-Learn-I2C-Inter-Integrated-Circuit).
 
 The full specification is avavailable at: http://www.i2c-bus.org/
 
-For your particalar printer, it might be an SPI bus instead of an I2C
+For your particular printer, it might be an SPI bus instead of an I2C
 bus. But this does not really matter: the analysis procedure is the
 same.
 
@@ -335,7 +335,7 @@ life of such product.
 To recap, we can expect the following informations in the EEPROM
 memory:
 
-* a standard header to verify if the EEPROM is correctly workding
+* a standard header to verify if the EEPROM is correctly working
 * a part number for model compatibility
 * a status/error value (to signal when the toner has caused a problem)
 * a 'dot' count number (and/or the number of printed pages)
@@ -359,13 +359,13 @@ The process is like this:
 * write the content into the EEPROM
 * try to print a page and restart if this does not work.
 
-In order to speed-up the process, i directly connect my Arduino to the
-chip inside the printer so i do not need to manipulate the printer
+In order to speed-up the process, I directly connect my Arduino to the
+chip inside the printer so I do not need to manipulate the printer
 during the experiments.
 
 ![Picture working installation](images/final_setup.jpg)
 
-As for me, i try a couple of random changes without success.
+As for me, I try a couple of random changes without success.
 Then i had the idea to erase all the memory except the addresses 0x0
 to 0x0f and it worked!
 
