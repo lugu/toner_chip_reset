@@ -1,6 +1,21 @@
 
 Here are some advices to reset your toner chip with an Arduino.
 
+# Motivation
+
+Your printer doesn´t know how much capacity if left in you toner
+cartridge. There is no sensor inside. Instead, your printer simply
+record how much you print in a chip of the toner carriage. It will
+then refuse to print when a pre-defined software limit is reached.
+
+If you can make your printer believe the toner carriage is brand new
+(while it isn't), you can force it to print more. This is what this
+guide does.
+
+Before your start, beware that some printers offer the functionality
+(reset the toner chip) via a
+[hidden menu](https://www.youtube.com/watch?v=J6lsUBu1TDg).
+
 # Introduction
 
 Some printer toner comes with a small circuit like:
